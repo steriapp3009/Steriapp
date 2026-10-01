@@ -68,6 +68,13 @@
       <!-- IZBOR: PRIJEM ILI IZDAVANJE -->
       <div id="step-main-choice" class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center space-y-4">
         <h2 class="text-xl font-bold text-gray-800">Odaberite evidenciju</h2>
+        
+        <!-- POLJE ZA DATUM -->
+        <div class="text-left">
+          <label for="entry-date" class="block text-sm font-semibold text-gray-700">Datum evidencije</label>
+          <input type="date" id="entry-date" class="w-full mt-1 p-2.5 border rounded-lg bg-gray-50 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
           <button id="btn-prijem" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg text-lg transition flex flex-col items-center justify-center gap-1">
             <span class="text-2xl">📥</span> PRIJEM
@@ -233,6 +240,12 @@
     let selectedDepartment = "";
     let cartItems = [];
     let pendingSelectedItem = "";
+
+    // Automatsko postavljanje današnjeg datuma u polje
+    const dateInput = document.getElementById('entry-date');
+    if (dateInput) {
+      dateInput.value = new Date().toISOString().split('T')[0];
+    }
 
     const departmentsData = {
       "Kirurgija": ["Abdomen (ABD)", "Dječja kirurgija", "Dječja ambulanta", "JIL", "Opća ambulanta", "ORL ambulanta", "ORL odjel", "Ortopedska ambulanta", "Traumatološki odjel", "Traumatološka ambulanta", "Urološka ambulanta", "Urološki odjel", "Vaskularna"],
@@ -457,9 +470,12 @@
         return;
       }
 
+      const selectedDate = document.getElementById('entry-date').value;
+
       try {
         await addDoc(collection(db, currentType === "PRIJEM" ? "prijem_evidencija" : "izdavanje_evidencija"), {
           vrsta: currentType,
+          datumEvidencije: selectedDate,
           kategorija: selectedCategory,
           odjel: selectedDepartment,
           stavke: cartItems,
@@ -585,11 +601,12 @@
         
         let itemsText = d.stavke ? d.stavke.map(s => `${s.naziv} (x${s.kolicina})`).join(', ') : '-';
         const isPrijem = d.vrsta === "PRIJEM";
+        const datumPrikaz = d.datumEvidencije ? ` | Datum: ${d.datumEvidencije}` : '';
 
         item.innerHTML = `
           <div class="flex justify-between font-bold">
             <span class="${isPrijem ? 'text-green-700' : 'text-red-700'}">
-              ${isPrijem ? '📥 PRIJEM' : '📤 IZDAVANJE'} - ${d.kategorija}
+              ${isPrijem ? '📥 PRIJEM' : '📤 IZDAVANJE'} - ${d.kategorija} ${datumPrikaz}
             </span>
             <span class="text-gray-500">${d.odjel}</span>
           </div>
