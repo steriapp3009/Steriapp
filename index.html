@@ -181,12 +181,21 @@
         </div>
       </div>
 
-      <!-- KORAK 1: KATEGORIJE ODJELA -->
+      <!-- KORAK 1: KATEGORIJE ODJELA + PREDLOŽENO -->
       <div id="step-categories" class="hidden bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
         <div class="flex justify-between items-center border-b pb-2">
           <h3 class="text-lg font-bold text-gray-800">Odaberite kategoriju</h3>
           <span id="badge-evidencija-type" class="px-3 py-1 rounded-full text-xs font-bold text-white"></span>
         </div>
+
+        <!-- SEKCIJA ZA PREDLOŽENO (Prikazuje se SAMO kod Izdavanja) -->
+        <div id="suggested-section" class="hidden space-y-2 bg-red-50 p-3 rounded-xl border border-red-200">
+          <h4 class="text-xs font-bold text-red-900 uppercase">📌 Predloženo (nemaju oznaku izdano):</h4>
+          <div id="suggested-items-list" class="space-y-1.5 max-h-40 overflow-y-auto p-1">
+            <p class="text-gray-500 italic text-xs text-center">Nema predloženih stavki.</p>
+          </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-3">
           <button type="button" class="btn-cat bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 text-blue-900 font-bold p-3 rounded-xl shadow-sm text-center" data-cat="Kirurgija">Kirurgija</button>
           <button type="button" class="btn-cat bg-pink-50 hover:bg-pink-100 border-2 border-pink-200 text-pink-900 font-bold p-3 rounded-xl shadow-sm text-center" data-cat="Ginekologija">Ginekologija</button>
@@ -687,7 +696,6 @@
       confirmNumBtn.addEventListener('click', () => {
         const qty = parseInt(document.getElementById('qty-input').value, 10) || 1;
         
-        // Osiguraj status prema vrsti evidencije
         const itemStatus = currentType === "PRIJEM" ? "zaprimljeno" : "izdano";
         
         cartItems.push({ 
@@ -1014,6 +1022,80 @@
     document.getElementById('step-categories').classList.remove('hidden');
     document.getElementById('step-departments').classList.add('hidden');
     document.getElementById('step-instruments').classList.add('hidden');
+
+    const suggestedSec = document.getElementById('suggested-section');
+    if (currentType === "IZDAVANJE") {
+      suggestedSec.classList.remove('hidden');
+      renderSuggestedItems();
+    } else {
+      suggestedSec.classList.add('hidden');
+    }
+  }
+
+  function renderSuggestedItems() {
+    const listDiv = document.getElementById('suggested-items-list');
+    if (!listDiv) return;
+    listDiv.innerHTML = "";
+
+    // Prikupi sve stavke koje nemaju status "izdano" (npr. zaprimljeno ili složeno)
+    const allLogs = [...prijemLogs, ...izdavanjeLogs];
+    let unissuedMap = {}; // ključ: "Kategorija | Odjel | Naziv", vrijednost: { kategorija, odjel, naziv, kolicina, isSet }
+
+    allLogs.forEach(log => {
+      if (log.stavke) {
+        log.stavke.forEach(s => {
+          const status = s.status || (log.vrsta === "PRIJEM" ? "zaprimljeno" : "izdano");
+          if (status !== "izdano") {
+            const key = `${log.kategorija}|${log.odjel}|${s.naziv}`;
+            if (!unissuedMap[key]) {
+              unissuedMap[key] = {
+                kategorija: log.kategorija,
+                odjel: log.odjel,
+                naziv: s.naziv,
+                kolicina: s.kolicina || 1,
+                isSet: s.isSet || false
+              };
+            }
+          }
+        });
+      }
+    });
+
+    const unissuedArray = Object.values(unissuedMap);
+
+    if (unissuedArray.length === 0) {
+      listDiv.innerHTML = `<p class="text-gray-500 italic text-xs text-center">Nema predloženih stavki (sve je izdano).</p>`;
+      return;
+    }
+
+    unissuedArray.forEach(item => {
+      const btn = document.createElement('button');
+      btn.type = "button";
+      btn.className = "w-full flex justify-between items-center bg-white border border-red-200 p-2 rounded-lg text-xs font-semibold text-gray-800 hover:bg-red-100 transition";
+      btn.innerHTML = `
+        <span class="truncate">${item.isSet ? '📦 ' : ''}<strong>${item.naziv}</strong> (${item.kategorija} → ${item.odjel})</span>
+        <span class="bg-red-600 text-white px-2 py-0.5 rounded text-[10px]">Izaberi</span>
+      `;
+      btn.onclick = () => {
+        selectedCategory = item.kategorija;
+        selectedDepartment = item.odjel;
+        
+        // Dodaj direktno u košaricu i otvori korak instrumenata
+        cartItems.push({
+          naziv: item.naziv,
+          kolicina: item.kolicina,
+          isSet: item.isSet,
+          status: "izdano"
+        });
+
+        document.getElementById('step-categories').classList.add('hidden');
+        document.getElementById('step-instruments').classList.remove('hidden');
+        document.getElementById('selected-dept-label').textContent = `${selectedCategory} → ${selectedDepartment}`;
+        renderInstrumentsMenu();
+        updateCartSummary();
+      };
+      listDiv.appendChild(btn);
+    });
   }
 
   function selectCategory(cat) {
@@ -1168,12 +1250,10 @@
 
     try {
       if (currentType === "IZDAVANJE") {
-        // Osiguraj da SVAKA stavka u izdavanju ima status "izdano"
         cartItems.forEach(item => {
           item.status = "izdano";
         });
 
-        // Spremi izdavanje u zbirnu bazu izdavanja sa statusom "izdano" za sve stavke
         await addDoc(collection(db, "izdavanje_evidencija"), {
           vrsta: "IZDAVANJE",
           datumEvidencije: selectedDate,
@@ -1186,7 +1266,6 @@
           datum: serverTimestamp()
         });
 
-        // Automatski ažuriraj status i za setove i za instrumente u prijašnjim prijemima ako postoje
         if (cartItems.length > 0) {
           const matchingPrijemLogs = prijemLogs.filter(log => 
             log.datumEvidencije === selectedDate && log.odjel === selectedDepartment
@@ -1211,7 +1290,6 @@
           }
         }
       } else {
-        // Prijem – svaka stavka dobiva status "zaprimljeno"
         cartItems.forEach(item => {
           item.status = "zaprimljeno";
         });
@@ -1300,9 +1378,9 @@
       
       let itemsHtml = d.stavke ? d.stavke.map(s => {
         const status = s.status || (d.vrsta === "PRIJEM" ? "zaprimljeno" : "izdano");
-        let badgeColor = "bg-green-100 text-green-800 border-green-300"; // zelena za zaprimljeno
+        let badgeColor = "bg-green-100 text-green-800 border-green-300";
         if (status === "izdano") {
-          badgeColor = "bg-red-100 text-red-800 border-red-300"; // crvena za izdano
+          badgeColor = "bg-red-100 text-red-800 border-red-300";
         } else if (status === "složeno") {
           badgeColor = "bg-blue-100 text-blue-800 border-blue-300";
         }
@@ -1367,9 +1445,9 @@
       
       let itemsHtml = d.stavke ? d.stavke.map(s => {
         const status = s.status || (d.vrsta === "PRIJEM" ? "zaprimljeno" : "izdano");
-        let badgeColor = "bg-green-100 text-green-800 border-green-300"; // zelena za zaprimljeno
+        let badgeColor = "bg-green-100 text-green-800 border-green-300";
         if (status === "izdano") {
-          badgeColor = "bg-red-100 text-red-800 border-red-300"; // crvena za izdano
+          badgeColor = "bg-red-100 text-red-800 border-red-300";
         } else if (status === "složeno") {
           badgeColor = "bg-blue-100 text-blue-800 border-blue-300";
         }
@@ -1517,47 +1595,26 @@
     });
   }
 
-  function closeEditModal() {
+  closeEditModal = function() {
     document.getElementById('edit-modal').classList.add('hidden');
-    editingLogId = null;
-    editingCollection = null;
-    editingItems = [];
   }
 
   async function saveEditedEntry() {
     if (!editingLogId || !editingCollection) return;
-
-    if (editingItems.length === 0) {
-      alert("Zapis mora sadržavati barem jednu stavku.");
-      return;
-    }
-
-    const updatedDate = document.getElementById('edit-date').value;
-    const updatedTime = document.getElementById('edit-time').value;
-    const editorName = currentUserData?.ime || currentUser?.email || "Moderator";
-
-    const now = new Date();
-    const currentHours = String(now.getHours()).padStart(2, '0');
-    const editTimeFormatted = `${currentHours}:${String(now.getMinutes()).padStart(2, '0')}`;
+    if (editingItems.length === 0) return alert("Zapis mora sadržavati barem jednu stavku.");
 
     try {
-      const docRef = doc(db, editingCollection, editingLogId);
-      await updateDoc(docRef, {
-        datumEvidencije: updatedDate,
-        vrijemeEvidencije: updatedTime,
+      await updateDoc(doc(db, editingCollection, editingLogId), {
         stavke: editingItems,
-        zadnjeUredio: editorName,
-        vrijemeUredivanja: editTimeFormatted,
-        datumUredivanja: serverTimestamp()
+        zadnjeUredio: currentUserData?.ime || currentUser?.email || "Admin/Mod",
+        vrijemeUredivanja: new Date().toTimeString().slice(0, 5)
       });
-
       alert("Zapis je uspješno ažuriran!");
       closeEditModal();
-    } catch (err) {
-      alert("Greška pri ažuriranju zapisa: " + err.message);
+    } catch (e) {
+      alert("Greška kod spremanja izmjena: " + e.message);
     }
   }
 </script>
-
 </body>
 </html>
