@@ -121,10 +121,16 @@
       <div id="step-main-choice" class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center space-y-4">
         <h2 class="text-xl font-bold text-gray-800">Odaberite evidenciju</h2>
         
-        <!-- POLJE ZA DATUM -->
-        <div class="text-left">
-          <label for="entry-date" class="block text-sm font-semibold text-gray-700">Datum evidencije</label>
-          <input type="date" id="entry-date" class="w-full mt-1 p-2.5 border rounded-lg bg-gray-50 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        <!-- POLJE ZA DATUM I VRIJEME -->
+        <div class="grid grid-cols-2 gap-2 text-left">
+          <div>
+            <label for="entry-date" class="block text-sm font-semibold text-gray-700">Datum</label>
+            <input type="date" id="entry-date" class="w-full mt-1 p-2.5 border rounded-lg bg-gray-50 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+          </div>
+          <div>
+            <label for="entry-time" class="block text-sm font-semibold text-gray-700">Vrijeme</label>
+            <input type="time" id="entry-time" class="w-full mt-1 p-2.5 border rounded-lg bg-gray-50 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm">
+          </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -298,9 +304,15 @@
             <button id="btn-close-edit" type="button" class="text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
           </div>
 
-          <div>
-            <label class="block text-xs font-bold text-gray-600">Datum evidencije:</label>
-            <input type="date" id="edit-date" class="w-full mt-1 p-2 border rounded-lg text-sm">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-bold text-gray-600">Datum evidencije:</label>
+              <input type="date" id="edit-date" class="w-full mt-1 p-2 border rounded-lg text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600">Vrijeme evidencije:</label>
+              <input type="time" id="edit-time" class="w-full mt-1 p-2 border rounded-lg text-sm">
+            </div>
           </div>
 
           <!-- DODAVANJE STAVKI IZ DROPDOWN MENIJA -->
@@ -401,7 +413,7 @@
 
   const departmentsData = {
     "Kirurgija": ["Abdomen (ABD)", "Dječja kirurgija", "Dječja ambulanta", "JIL", "Opća ambulanta", "ORL ambulanta", "ORL odjel", "Ortopedska ambulanta", "Traumatološki odjel", "Traumatološka ambulanta", "Urološka ambulanta", "Urološki odjel", "Vaskularna"],
-    "Ginekologija": ["Gin. odjel", "Novorođenački", "Rađaona", "Rodilište", "UZV"],
+    "Ginekologija": ["Gin. odjel", "Novorođenački", "Rađaona", "Rodilište", UZV"],
     "Interna": ["Int 1 (kardio)", "Int 2b (gastro)", "Int 2a (endokrina)", "Int 3 (nefro)", "Int 4 (pojačana skrb)", "Gastroskopija", "Infektologija"],
     "Vanjski odjeli": ["Citologija", "EMNG", "Hemodijaliza", "KVD", "Laboratorij", "Ljekarna", "Neurologija", "Očna ambulanta", "Očni odjel", "OHBP ORL", "OHBP-HKA", "OHBP-SALA", "Pedijatrija", "Produženo", "Pulmologija", "Pulmološka ambulanta", "RTG"]
   };
@@ -426,9 +438,18 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     const dateInput = document.getElementById('entry-date');
+    const timeInput = document.getElementById('entry-time');
+    const now = new Date();
+
     if (dateInput) {
-      dateInput.value = new Date().toISOString().split('T')[0];
+      dateInput.value = now.toISOString().split('T')[0];
       dateInput.addEventListener('change', () => renderOrdersScreen());
+    }
+
+    if (timeInput) {
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      timeInput.value = `${hours}:${minutes}`;
     }
 
     const authToggleBtn = document.getElementById('auth-toggle-link');
@@ -919,6 +940,8 @@
         if (currentStatus === "složeno") statusBadgeClass = "bg-blue-100 text-blue-800 border-blue-300";
         if (currentStatus === "izdano") statusBadgeClass = "bg-green-100 text-green-800 border-green-300";
 
+        const timeString = log.vrijemeEvidencije ? ` u ${log.vrijemeEvidencije}` : '';
+
         card.innerHTML = `
           <div class="flex justify-between items-start">
             <div>
@@ -931,7 +954,7 @@
           </div>
 
           <div class="flex items-center justify-between border-t border-amber-200 pt-2 mt-1">
-            <span class="text-[10px] text-gray-500">Unio: ${log.operaterIme || log.operaterEmail}</span>
+            <span class="text-[10px] text-gray-500">Unio: ${log.operaterIme || log.operaterEmail}${timeString}</span>
             <div class="flex gap-1">
               <button type="button" class="btn-change-set-status bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-[10px] font-bold transition" data-logid="${log.id}" data-coll="${log.collectionName}" data-itemidx="${itemIdx}" data-status="zaprimljeno">Zaprimljeno</button>
               <button type="button" class="btn-change-set-status bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-[10px] font-bold transition" data-logid="${log.id}" data-coll="${log.collectionName}" data-itemidx="${itemIdx}" data-status="složeno">Složeno</button>
@@ -1126,6 +1149,7 @@
     }
 
     const selectedDate = document.getElementById('entry-date').value;
+    const selectedTime = document.getElementById('entry-time').value || new Date().toTimeString().slice(0, 5);
 
     let operaterIme = currentUserData?.ime;
     if (!operaterIme && currentUser) {
@@ -1173,6 +1197,7 @@
           await addDoc(collection(db, "izdavanje_evidencija"), {
             vrsta: "IZDAVANJE",
             datumEvidencije: selectedDate,
+            vrijemeEvidencije: selectedTime,
             kategorija: selectedCategory,
             odjel: selectedDepartment,
             stavke: regularInstruments,
@@ -1185,6 +1210,7 @@
         await addDoc(collection(db, "prijem_evidencija"), {
           vrsta: "PRIJEM",
           datumEvidencije: selectedDate,
+          vrijemeEvidencije: selectedTime,
           kategorija: selectedCategory,
           odjel: selectedDepartment,
           stavke: cartItems,
@@ -1265,9 +1291,11 @@
       
       let itemsText = d.stavke ? d.stavke.map(s => `${s.isSet ? '📦 ' : ''}${s.naziv} (x${s.kolicina})`).join(', ') : '-';
       const isPrijem = d.vrsta === "PRIJEM";
-      const datumPrikaz = d.datumEvidencije ? ` | Datum: ${d.datumEvidencije}` : '';
+      const timeText = d.vrijemeEvidencije ? ` u ${d.vrijemeEvidencije}` : '';
+      const datumPrikaz = d.datumEvidencije ? ` | Datum: ${d.datumEvidencije}${timeText}` : '';
       const displayAuthor = d.operaterIme || d.operaterEmail || '-';
-      const lastEditedText = d.zadnjeUredio ? ` <span class="text-indigo-600">(Uredio: ${d.zadnjeUredio})</span>` : '';
+      const editTimeText = d.vrijemeUredivanja ? ` u ${d.vrijemeUredivanja}` : '';
+      const lastEditedText = d.zadnjeUredio ? ` <span class="text-indigo-600">(Uredio: ${d.zadnjeUredio}${editTimeText})</span>` : '';
 
       item.innerHTML = `
         <div class="flex justify-between items-center font-bold pr-6">
@@ -1317,9 +1345,11 @@
       
       let itemsText = d.stavke ? d.stavke.map(s => `${s.isSet ? '📦 ' : ''}${s.naziv} (x${s.kolicina})`).join(', ') : '-';
       const isPrijem = d.vrsta === "PRIJEM";
-      const datumPrikaz = d.datumEvidencije ? `Datum: ${d.datumEvidencije}` : '';
+      const timeText = d.vrijemeEvidencije ? ` ${d.vrijemeEvidencije}` : '';
+      const datumPrikaz = d.datumEvidencije ? `Datum: ${d.datumEvidencije}${timeText}` : '';
       const displayAuthor = d.operaterIme || d.operaterEmail || '-';
-      const lastEditedText = d.zadnjeUredio ? ` <span class="text-indigo-600">(Uredio: ${d.zadnjeUredio})</span>` : '';
+      const editTimeText = d.vrijemeUredivanja ? ` u ${d.vrijemeUredivanja}` : '';
+      const lastEditedText = d.zadnjeUredio ? ` <span class="text-indigo-600">(Uredio: ${d.zadnjeUredio}${editTimeText})</span>` : '';
 
       item.innerHTML = `
         <div class="flex justify-between items-center font-bold pr-6">
@@ -1358,7 +1388,13 @@
 
     if (!logData) return alert("Zapis nije pronađen.");
 
-    document.getElementById('edit-date').value = logData.datumEvidencije || new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    document.getElementById('edit-date').value = logData.datumEvidencije || now.toISOString().split('T')[0];
+    document.getElementById('edit-time').value = logData.vrijemeEvidencije || `${hours}:${minutes}`;
+
     editingItems = logData.stavke ? JSON.parse(JSON.stringify(logData.stavke)) : [];
 
     populateEditDropdownItems();
@@ -1462,14 +1498,22 @@
     }
 
     const updatedDate = document.getElementById('edit-date').value;
+    const updatedTime = document.getElementById('edit-time').value;
     const editorName = currentUserData?.ime || currentUser?.email || "Moderator";
+
+    const now = new Date();
+    const currentHours = String(now.getHours()).padStart(2, '0');
+    const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+    const editTimeFormatted = `${currentHours}:${currentMinutes}`;
 
     try {
       const docRef = doc(db, editingCollection, editingLogId);
       await updateDoc(docRef, {
         datumEvidencije: updatedDate,
+        vrijemeEvidencije: updatedTime,
         stavke: editingItems,
         zadnjeUredio: editorName,
+        vrijemeUredivanja: editTimeFormatted,
         datumUredivanja: serverTimestamp()
       });
 
