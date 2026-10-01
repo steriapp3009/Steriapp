@@ -1037,9 +1037,8 @@
     if (!listDiv) return;
     listDiv.innerHTML = "";
 
-    // Prikupi sve stavke koje nemaju status "izdano" (npr. zaprimljeno ili složeno)
     const allLogs = [...prijemLogs, ...izdavanjeLogs];
-    let unissuedMap = {}; // ključ: "Kategorija | Odjel | Naziv", vrijednost: { kategorija, odjel, naziv, kolicina, isSet }
+    let unissuedMap = {};
 
     allLogs.forEach(log => {
       if (log.stavke) {
@@ -1080,7 +1079,6 @@
         selectedCategory = item.kategorija;
         selectedDepartment = item.odjel;
         
-        // Dodaj direktno u košaricu i otvori korak instrumenata
         cartItems.push({
           naziv: item.naziv,
           kolicina: item.kolicina,
@@ -1254,6 +1252,7 @@
           item.status = "izdano";
         });
 
+        // 1. Spremi dokument u izdavanje_evidencija
         await addDoc(collection(db, "izdavanje_evidencija"), {
           vrsta: "IZDAVANJE",
           datumEvidencije: selectedDate,
@@ -1266,20 +1265,21 @@
           datum: serverTimestamp()
         });
 
+        // 2. Ažuriraj status u svim prijašnjim prijemima za taj odjel kako bi nestali iz "Predloženo"
         if (cartItems.length > 0) {
-          const matchingPrijemLogs = prijemLogs.filter(log => 
-            log.datumEvidencije === selectedDate && log.odjel === selectedDepartment
-          );
+          const matchingPrijemLogs = prijemLogs.filter(log => log.odjel === selectedDepartment);
 
           for (const cartItem of cartItems) {
             for (const log of matchingPrijemLogs) {
               let logUpdated = false;
-              log.stavke.forEach(s => {
-                if (s.naziv === cartItem.naziv) {
-                  s.status = "izdano";
-                  logUpdated = true;
-                }
-              });
+              if (log.stavke) {
+                log.stavke.forEach(s => {
+                  if (s.naziv === cartItem.naziv && s.status !== "izdano") {
+                    s.status = "izdano";
+                    logUpdated = true;
+                  }
+                });
+              }
 
               if (logUpdated) {
                 await updateDoc(doc(db, "prijem_evidencija", log.id), {
@@ -1595,7 +1595,7 @@
     });
   }
 
-  closeEditModal = function() {
+  function closeEditModal() {
     document.getElementById('edit-modal').classList.add('hidden');
   }
 
