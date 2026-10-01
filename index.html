@@ -68,6 +68,15 @@
       <!-- IZBOR: PRIJEM, IZDAVANJE ILI PREGLED -->
       <div id="step-main-choice" class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center space-y-4">
         <h2 class="text-xl font-bold text-gray-800">Odaberite opciju</h2>
+
+        <!-- ODABIR DATUMA -->
+        <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 text-left space-y-1">
+          <label for="entry-date" class="block text-xs font-bold text-blue-800 uppercase tracking-wide">
+            📅 Datum evidencije
+          </label>
+          <input type="date" id="entry-date" class="w-full p-2.5 border border-blue-300 rounded-lg bg-white text-gray-800 font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
           <button id="btn-prijem" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg text-lg transition flex flex-col items-center justify-center gap-1">
             <span class="text-2xl">📥</span> PRIJEM
@@ -206,6 +215,12 @@
     let currentUser = null;
     let currentType = "PRIJEM";
 
+    // Inicijalno postavljanje datuma na danas
+    const dateInput = document.getElementById('entry-date');
+    if (dateInput) {
+      dateInput.value = new Date().toISOString().split('T')[0];
+    }
+
     const departmentsData = {
       "Kirurgija": ["Abdomen (ABD)", "Dječja kirurgija", "Dječja ambulanta", "JIL", "Opća ambulanta", "ORL ambulanta", "ORL odjel", "Ortopedska ambulanta", "Traumatološki odjel", "Traumatološka ambulanta", "Urološka ambulanta", "Urološki odjel", "Vaskularna"],
       "Ginekologija": ["Gin. odjel", "Novorođenački", "Rađaona", "Rodilište", "UZV"],
@@ -311,6 +326,7 @@
       const group = document.getElementById('form-instrument-group').value;
       const subContainer = document.getElementById('subgroup-container');
       const customContainer = document.getElementById('custom-input-container');
+      const selectedDate = document.getElementById('entry-date').value;
       
       let itemDetail = "";
 
@@ -331,14 +347,15 @@
       try {
         await addDoc(collection(db, currentType === "PRIJEM" ? "prijem_evidencija" : "izdavanje_evidencija"), {
           vrsta: currentType,
+          datumEvidencije: selectedDate,
           kategorija: document.getElementById('form-category').value,
           odjel: document.getElementById('form-department').value,
           instrument: itemDetail,
           kolicina: qty,
           operaterEmail: currentUser.email,
-          datum: serverTimestamp()
+          datumUnosa: serverTimestamp()
         });
-        alert("Spremljeno!");
+        alert("Spremljeno za datum: " + selectedDate);
         resetMain();
       } catch (e) {
         alert("Greška: " + e.message);
@@ -360,7 +377,7 @@
 
       try {
         const colName = type === "PRIJEM" ? "prijem_evidencija" : "izdavanje_evidencija";
-        const q = query(collection(db, colName), orderBy("datum", "desc"));
+        const q = query(collection(db, colName), orderBy("datumUnosa", "desc"));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
@@ -372,11 +389,7 @@
         querySnapshot.forEach((docSnap) => {
           const data = docSnap.data();
           
-          let dateStr = "Prije nekoliko trenutaka";
-          if (data.datum && data.datum.toDate) {
-            const d = data.datum.toDate();
-            dateStr = d.toLocaleDateString('hr-HR') + ' u ' + d.toLocaleTimeString('hr-HR', { hour: '2-digit', minute: '2-digit' });
-          }
+          let dateStr = data.datumEvidencije || "-";
 
           // Format pojedinačnog zapisa
           const row = document.createElement('div');
@@ -388,7 +401,7 @@
           row.innerHTML = `
             <div class="flex justify-between font-bold text-gray-700 border-b pb-1">
               <span>${data.kategorija || ''} - ${data.odjel || ''}</span>
-              <span class="text-gray-400 font-normal text-[10px]">${dateStr}</span>
+              <span class="text-blue-600 font-semibold text-xs">📅 ${dateStr}</span>
             </div>
             <div class="flex justify-between items-center pt-1">
               <span class="font-semibold text-gray-800 text-sm">${detailItem}</span>
