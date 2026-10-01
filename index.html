@@ -268,7 +268,7 @@
   const db = getFirestore(app);
 
   let currentUser = null;
-  let currentUserData = null; // Sprema dodatne podatke (ime, uloga...)
+  let currentUserData = null;
   let currentType = "PRIJEM";
   let selectedCategory = "";
   let selectedDepartment = "";
@@ -538,6 +538,20 @@
 
     const selectedDate = document.getElementById('entry-date').value;
 
+    // Fetch user details dynamically if currentUserData is missing
+    let operaterIme = currentUserData?.ime;
+    if (!operaterIme && currentUser) {
+      try {
+        const uDoc = await getDoc(doc(db, "users", currentUser.uid));
+        if (uDoc.exists()) {
+          currentUserData = uDoc.data();
+          operaterIme = currentUserData.ime;
+        }
+      } catch (e) {
+        console.error("Could not fetch user name dynamically", e);
+      }
+    }
+
     try {
       await addDoc(collection(db, currentType === "PRIJEM" ? "prijem_evidencija" : "izdavanje_evidencija"), {
         vrsta: currentType,
@@ -545,8 +559,8 @@
         kategorija: selectedCategory,
         odjel: selectedDepartment,
         stavke: cartItems,
-        operaterEmail: currentUser.email,
-        operaterIme: currentUserData?.ime || currentUser.email,
+        operaterEmail: currentUser ? currentUser.email : "",
+        operaterIme: operaterIme || currentUser?.email || "Nepoznati operater",
         datum: serverTimestamp()
       });
 
@@ -570,27 +584,31 @@
     cartItems = [];
   }
 
-  // FIREBASE AUTH
+  // FIREBASE AUTH (FETCHES USER DOC BEFORE DISPLAYING LOGS)
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       currentUser = user;
       document.getElementById('btn-logout').classList.remove('hidden');
       document.getElementById('auth-container').classList.add('hidden');
 
-      const userDoc = await getDoc(doc(docRef = doc(db, "users", user.uid)));
-      if (userDoc.exists()) {
-        currentUserData = userDoc.data();
-        if (currentUserData.status === "aktivan") {
-          document.getElementById('pending-container').classList.add('hidden');
-          document.getElementById('app-container').classList.remove('hidden');
-          loadAllLogs();
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          currentUserData = userDoc.data();
+          if (currentUserData.status === "aktivan") {
+            document.getElementById('pending-container').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            loadAllLogs();
+          } else {
+            document.getElementById('pending-container').classList.remove('hidden');
+            document.getElementById('app-container').classList.add('hidden');
+          }
         } else {
           document.getElementById('pending-container').classList.remove('hidden');
           document.getElementById('app-container').classList.add('hidden');
         }
-      } else {
-        document.getElementById('pending-container').classList.remove('hidden');
-        document.getElementById('app-container').classList.add('hidden');
+      } catch (err) {
+        console.error("Error fetching user data:", err);
       }
     } else {
       currentUser = null;
@@ -682,6 +700,7 @@
       let itemsText = d.stavke ? d.stavke.map(s => `${s.naziv} (x${s.kolicina})`).join(', ') : '-';
       const isPrijem = d.vrsta === "PRIJEM";
       const datumPrikaz = d.datumEvidencije ? ` | Datum: ${d.datumEvidencije}` : '';
+      const displayAuthor = d.operaterIme || d.operaterEmail || '-';
 
       item.innerHTML = `
         <div class="flex justify-between font-bold">
@@ -691,7 +710,7 @@
           <span class="text-gray-500">${d.odjel}</span>
         </div>
         <p class="text-gray-800"><strong>Stavke:</strong> ${itemsText}</p>
-        <p class="text-[10px] text-gray-400">Unio: ${d.operaterIme || d.operaterEmail || '-'}</p>
+        <p class="text-[10px] text-gray-400">Unio: ${displayAuthor}</p>
       `;
       list.appendChild(item);
     });
@@ -726,6 +745,7 @@
       let itemsText = d.stavke ? d.stavke.map(s => `${s.naziv} (x${s.kolicina})`).join(', ') : '-';
       const isPrijem = d.vrsta === "PRIJEM";
       const datumPrikaz = d.datumEvidencije ? `Datum: ${d.datumEvidencije}` : '';
+      const displayAuthor = d.operaterIme || d.operaterEmail || '-';
 
       item.innerHTML = `
         <div class="flex justify-between font-bold">
@@ -736,7 +756,7 @@
         </div>
         <p class="text-gray-700 font-semibold">Odjel: <span class="font-normal text-gray-900">${d.odjel}</span></p>
         <p class="text-gray-800"><strong>Stavke:</strong> ${itemsText}</p>
-        <p class="text-[10px] text-gray-400">Unio: ${d.operaterIme || d.operaterEmail || '-'}</p>
+        <p class="text-[10px] text-gray-400">Unio: ${displayAuthor}</p>
       `;
       list.appendChild(item);
     });
