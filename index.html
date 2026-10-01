@@ -68,6 +68,13 @@
       <!-- IZBOR: PRIJEM ILI IZDAVANJE -->
       <div id="step-main-choice" class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center space-y-4">
         <h2 class="text-xl font-bold text-gray-800">Odaberite evidenciju</h2>
+
+        <!-- POLJE ZA DATUM -->
+        <div class="text-left">
+          <label for="entry-date" class="block text-sm font-semibold text-gray-700">Datum evidencije</label>
+          <input type="date" id="entry-date" class="w-full mt-1 p-2.5 border rounded-lg bg-gray-50 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
           <button id="btn-prijem" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg text-lg transition flex flex-col items-center justify-center gap-1">
             <span class="text-2xl">📥</span> PRIJEM
@@ -175,6 +182,12 @@
     let currentUser = null;
     let currentType = "PRIJEM";
 
+    // Automatsko postavljanje današnjeg datuma u polje
+    const dateInput = document.getElementById('entry-date');
+    if (dateInput) {
+      dateInput.value = new Date().toISOString().split('T')[0];
+    }
+
     const departmentsData = {
       "Kirurgija": ["Abdomen (ABD)", "Dječja kirurgija", "Dječja ambulanta", "JIL", "Opća ambulanta", "ORL ambulanta", "ORL odjel", "Ortopedska ambulanta", "Traumatološki odjel", "Traumatološka ambulanta", "Urološka ambulanta", "Urološki odjel", "Vaskularna"],
       "Ginekologija": ["Gin. odjel", "Novorođenački", "Rađaona", "Rodilište", "UZV"],
@@ -232,7 +245,6 @@
       const customContainer = document.getElementById('custom-input-container');
       const subSelect = document.getElementById('form-instrument-sub');
 
-      // Ako je odabrano glavno "Drugo"
       if (group === "Drugo") {
         subContainer.classList.add('hidden');
         customContainer.classList.remove('hidden');
@@ -287,10 +299,12 @@
       }
 
       const qty = parseInt(document.getElementById('form-qty').value) || 1;
+      const selectedDate = document.getElementById('entry-date').value;
 
       try {
         await addDoc(collection(db, currentType === "PRIJEM" ? "prijem_evidencija" : "izdavanje_evidencija"), {
           vrsta: currentType,
+          datumEvidencije: selectedDate,
           kategorija: document.getElementById('form-category').value,
           odjel: document.getElementById('form-department').value,
           instrument: itemDetail,
