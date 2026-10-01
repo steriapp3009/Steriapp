@@ -84,13 +84,13 @@
           </button>
         </div>
 
-        <!-- NOVI GUMB ZA POVIJEST -->
+        <!-- GUMB ZA POVIJEST -->
         <button id="btn-open-history" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md text-base transition flex items-center justify-center gap-2">
           <span>📋</span> Pregled povijesti po datumima
         </button>
       </div>
 
-      <!-- EKRAN ZA POVIJEST (ODVOJENO PRIJEM/IZDAVANJE + FILTER DATUMA) -->
+      <!-- EKRAN ZA POVIJEST -->
       <div id="step-history-screen" class="hidden bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
         <div class="flex justify-between items-center border-b pb-2">
           <h3 class="text-lg font-bold text-gray-800">Arhiva / Povijest</h3>
@@ -130,8 +130,8 @@
           <button class="btn-cat bg-amber-50 hover:bg-amber-100 border-2 border-amber-200 text-amber-900 font-bold p-3 rounded-xl shadow-sm text-center" data-cat="Interna">Interna</button>
           <button class="btn-cat bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 text-slate-900 font-bold p-3 rounded-xl shadow-sm text-center" data-cat="Vanjski odjeli">Vanjski odjeli</button>
         </div>
-        <button class="btn-back-main w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 rounded-lg text-sm">
-          ← Nazad
+        <button id="btn-back-main" class="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 rounded-lg text-sm">
+          ← Nazad na početak
         </button>
       </div>
 
@@ -151,7 +151,7 @@
           <h3 class="text-lg font-bold text-gray-800">Odaberite instrumente / narudžbu</h3>
         </div>
 
-        <!-- LISTA KOŠARICE (ODABRANE STAVKE) -->
+        <!-- LISTA KOŠARICE -->
         <div id="cart-summary" class="bg-gray-50 p-3 rounded-lg border text-sm space-y-1">
           <p class="text-gray-500 italic text-xs">Još niste dodali niti jedan instrument.</p>
         </div>
@@ -168,7 +168,7 @@
           <div id="subgroup-list" class="grid grid-cols-1 gap-2"></div>
         </div>
 
-        <!-- MODAL ZA RUČNI UNOS (DRUGO) -->
+        <!-- MODAL ZA RUČNI UNOS -->
         <div id="custom-item-modal" class="hidden bg-purple-50 p-4 rounded-xl border border-purple-200 space-y-3">
           <h4 id="custom-item-title" class="font-bold text-purple-900 text-sm">Ručni unos naziva</h4>
           <input type="text" id="custom-item-input" placeholder="Unesite naziv..." class="w-full p-2.5 border border-purple-300 rounded-lg focus:outline-none bg-white">
@@ -184,21 +184,24 @@
             <span class="text-xs text-gray-400">Unesite količinu</span>
           </div>
           <input type="number" id="qty-input" value="1" min="1" class="w-full text-center text-3xl font-bold bg-slate-700 border border-slate-600 text-white rounded-lg p-2 focus:outline-none">
-       <div class="grid grid-cols-3 gap-2 mt-4">
-  <button class="btn-num p-3 bg-gray-100 font-bold rounded-lg hover:bg-gray-200" data-num="1">1</button>
-  <button class="btn-num p-3 bg-gray-100 font-bold rounded-lg hover:bg-gray-200" data-num="2">2</button>
-  <button class="btn-num p-3 bg-gray-100 font-bold rounded-lg hover:bg-gray-200" data-num="3">3</button>
-  <button class="btn-num p-3 bg-gray-100 font-bold rounded-lg hover:bg-gray-200" data-num="4">4</button>
-  <button class="btn-num p-3 bg-gray-100 font-bold rounded-lg hover:bg-gray-200" data-num="5">5</button>
-  <button class="btn-num p-3 bg-gray-100 font-bold rounded-lg hover:bg-gray-200" data-num="6">6</button>
-  <button class="btn-num p-3 bg-gray-100 font-bold rounded-lg hover:bg-gray-200" data-num="7">7</button>
-  <button class="btn-num p-3 bg-gray-100 font-bold rounded-lg hover:bg-gray-200" data-num="8">8</button>
-  <button class="btn-num p-3 bg-gray-100 font-bold rounded-lg hover:bg-gray-200" data-num="9">9</button>
-  
-  <button id="btn-num-clear" class="p-3 bg-red-100 text-red-700 font-bold rounded-lg hover:bg-red-200">C</button>
-  <button class="btn-num p-3 bg-gray-100 font-bold rounded-lg hover:bg-gray-200" data-num="0">0</button>
-  <button id="btn-num-backspace" class="p-3 bg-yellow-100 text-yellow-800 font-bold rounded-lg hover:bg-yellow-200">⌫</button>
-</div>
+          <div class="grid grid-cols-3 gap-2 mt-4">
+            <button class="btn-num p-3 bg-gray-100 text-gray-800 font-bold rounded-lg hover:bg-gray-200" data-num="1">1</button>
+            <button class="btn-num p-3 bg-gray-100 text-gray-800 font-bold rounded-lg hover:bg-gray-200" data-num="2">2</button>
+            <button class="btn-num p-3 bg-gray-100 text-gray-800 font-bold rounded-lg hover:bg-gray-200" data-num="3">3</button>
+            <button class="btn-num p-3 bg-gray-100 text-gray-800 font-bold rounded-lg hover:bg-gray-200" data-num="4">4</button>
+            <button class="btn-num p-3 bg-gray-100 text-gray-800 font-bold rounded-lg hover:bg-gray-200" data-num="5">5</button>
+            <button class="btn-num p-3 bg-gray-100 text-gray-800 font-bold rounded-lg hover:bg-gray-200" data-num="6">6</button>
+            <button class="btn-num p-3 bg-gray-100 text-gray-800 font-bold rounded-lg hover:bg-gray-200" data-num="7">7</button>
+            <button class="btn-num p-3 bg-gray-100 text-gray-800 font-bold rounded-lg hover:bg-gray-200" data-num="8">8</button>
+            <button class="btn-num p-3 bg-gray-100 text-gray-800 font-bold rounded-lg hover:bg-gray-200" data-num="9">9</button>
+            
+            <button id="btn-num-clear" class="p-3 bg-red-100 text-red-700 font-bold rounded-lg hover:bg-red-200">C</button>
+            <button class="btn-num p-3 bg-gray-100 text-gray-800 font-bold rounded-lg hover:bg-gray-200" data-num="0">0</button>
+            <button id="btn-num-backspace" class="p-3 bg-yellow-100 text-yellow-800 font-bold rounded-lg hover:bg-yellow-200">⌫</button>
+          </div>
+          <button id="btn-num-confirm" class="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg text-sm">
+            Potvrdi količinu
+          </button>
         </div>
 
         <!-- GUMB ZA NARUDŽBU (SETVE) -->
@@ -230,7 +233,7 @@
         </div>
       </div>
 
-      <!-- POVIJEST EVIDENCIJE NA GLAVNOM EKRANU (ZADNJI UNOSI) -->
+      <!-- POVIJEST EVIDENCIJE NA GLAVNOM EKRANU -->
       <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
         <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Zadnje evidencije</h3>
         <div id="logs-list" class="space-y-3">
@@ -277,6 +280,8 @@
   let pendingSelectedItem = "";
 
   let historyActiveTab = "PRIJEM";
+  let prijemLogs = [];
+  let izdavanjeLogs = [];
 
   const dateInput = document.getElementById('entry-date');
   if (dateInput) {
@@ -306,9 +311,99 @@
     { name: "Drugo", isCustom: true }
   ];
 
+  // PRIJAVA I REGISTRACIJA
+  document.getElementById('auth-toggle-link').addEventListener('click', () => {
+    const reg = document.getElementById('reg-fields');
+    reg.classList.toggle('hidden');
+    const isReg = !reg.classList.contains('hidden');
+    document.getElementById('auth-title').textContent = isReg ? 'Registracija računa' : 'Prijava u sustav';
+    document.getElementById('btn-auth-action').textContent = isReg ? 'Pošalji zahtjev' : 'Prijavi se';
+    document.getElementById('auth-toggle-text').textContent = isReg ? 'Već imate račun?' : 'Nemate račun?';
+    document.getElementById('auth-toggle-link').textContent = isReg ? 'Prijavite se' : 'Registrirajte se';
+  });
+
+  document.getElementById('btn-auth-action').addEventListener('click', async () => {
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const name = document.getElementById('auth-name').value.trim();
+    const isReg = !document.getElementById('reg-fields').classList.contains('hidden');
+
+    if (!email || !password) return alert("Unesite e-mail i lozinku.");
+
+    try {
+      if (isReg) {
+        if (!name) return alert("Unesite ime.");
+        const res = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, "users", res.user.uid), {
+          uid: res.user.uid, 
+          email, 
+          ime: name, 
+          uloga: "korisnik", 
+          status: "aktivan",
+          datum: serverTimestamp()
+        });
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
+    } catch (e) {
+      alert("Greška: " + e.message);
+    }
+  });
+
+  document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+  // ODRŽAVANJE AUTENTIFIKACIJSKOG STANJA
+  onAuthStateChanged(auth, async (user) => {
+    const btnLogout = document.getElementById('btn-logout');
+    const authCont = document.getElementById('auth-container');
+    const appCont = document.getElementById('app-container');
+    const pendingCont = document.getElementById('pending-container');
+
+    if (user) {
+      currentUser = user;
+      if (btnLogout) btnLogout.classList.remove('hidden');
+      if (authCont) authCont.classList.add('hidden');
+
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          currentUserData = userDoc.data();
+          if (!currentUserData.status || currentUserData.status === "aktivan") {
+            if (pendingCont) pendingCont.classList.add('hidden');
+            if (appCont) appCont.classList.remove('hidden');
+            loadAllLogs();
+          } else {
+            if (pendingCont) pendingCont.classList.remove('hidden');
+            if (appCont) appCont.classList.add('hidden');
+          }
+        } else {
+          if (pendingCont) pendingCont.classList.add('hidden');
+          if (appCont) appCont.classList.remove('hidden');
+          loadAllLogs();
+        }
+      } catch (e) {
+        console.error("Greška provjere korisinika:", e);
+        if (pendingCont) pendingCont.classList.add('hidden');
+        if (appCont) appCont.classList.remove('hidden');
+        loadAllLogs();
+      }
+    } else {
+      currentUser = null;
+      currentUserData = null;
+      if (btnLogout) btnLogout.classList.add('hidden');
+      if (authCont) authCont.classList.remove('hidden');
+      if (appCont) appCont.classList.add('hidden');
+      if (pendingCont) pendingCont.classList.add('hidden');
+    }
+  });
+
+  // NAVIGACIJA KROZ SUČELJE
   document.getElementById('btn-prijem').addEventListener('click', () => startFlow("PRIJEM"));
   document.getElementById('btn-izdavanje').addEventListener('click', () => startFlow("IZDAVANJE"));
-  document.querySelector('.btn-back-main').addEventListener('click', resetToMain);
+  
+  const backMainBtn = document.getElementById('btn-back-main');
+  if (backMainBtn) backMainBtn.addEventListener('click', resetToMain);
+  
   document.getElementById('btn-back-cats').addEventListener('click', showCategories);
   document.getElementById('btn-cancel-entry').addEventListener('click', resetToMain);
 
@@ -371,13 +466,12 @@
     openQtyModal(val);
   });
 
-// Number Pad Listeners (Digits 0-9)
+  // BROJČANA TIPKOVNICA LOGIKA
   document.querySelectorAll('.btn-num').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const num = e.target.getAttribute('data-num');
       const input = document.getElementById('qty-input');
-      
-      if (input.value === "0") {
+      if (input.value === "0" || input.value === "") {
         input.value = num;
       } else {
         input.value += num;
@@ -385,21 +479,15 @@
     });
   });
 
-  // Clear (C) Button - Clears entire input
   document.getElementById('btn-num-clear').addEventListener('click', () => {
     document.getElementById('qty-input').value = "";
   });
 
-  // Backspace (⌫) Button - Removes last character
-  const btnBackspace = document.getElementById('btn-num-backspace');
-  if (btnBackspace) {
-    btnBackspace.addEventListener('click', () => {
-      const input = document.getElementById('qty-input');
-      input.value = input.value.slice(0, -1);
-    });
-  }
+  document.getElementById('btn-num-backspace').addEventListener('click', () => {
+    const input = document.getElementById('qty-input');
+    input.value = input.value.slice(0, -1);
+  });
 
-  // Confirm Button - Falls back to 1 if user left input empty
   document.getElementById('btn-num-confirm').addEventListener('click', () => {
     const qty = parseInt(document.getElementById('qty-input').value, 10) || 1;
     cartItems.push({ naziv: pendingSelectedItem, kolicina: qty });
@@ -409,6 +497,7 @@
 
   document.getElementById('btn-save-final').addEventListener('click', saveFinalEntry);
 
+  // POMOĆNE FUNKCIJE TIJEKA
   function startFlow(type) {
     currentType = type;
     cartItems = [];
@@ -478,7 +567,6 @@
           }
         };
       }
-
       menuDiv.appendChild(btn);
     });
   }
@@ -511,13 +599,12 @@
     document.getElementById('custom-item-modal').classList.remove('hidden');
   }
 
-  // Open Modal - starts empty so typing 1 then 2 yields "12"
   function openQtyModal(itemName) {
     pendingSelectedItem = itemName;
     document.getElementById('subgroup-modal').classList.add('hidden');
     document.getElementById('custom-item-modal').classList.add('hidden');
     document.getElementById('qty-item-name').textContent = itemName;
-    document.getElementById('qty-input').value = ""; // Clean slate
+    document.getElementById('qty-input').value = "";
     document.getElementById('qty-modal').classList.remove('hidden');
   }
 
@@ -565,7 +652,7 @@
           operaterIme = currentUserData.ime;
         }
       } catch (e) {
-        console.error("Could not fetch user name dynamically", e);
+        console.error("Greška pri dohvaćanju imena operatera:", e);
       }
     }
 
@@ -601,102 +688,7 @@
     cartItems = [];
   }
 
-  // ROBUST AUTH & SCREEN STATE CONTROLLER
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      currentUser = user;
-      
-      const btnLogout = document.getElementById('btn-logout');
-      const authCont = document.getElementById('auth-container');
-      const pendingCont = document.getElementById('pending-container');
-      const appCont = document.getElementById('app-container');
-
-      if (btnLogout) btnLogout.classList.remove('hidden');
-      if (authCont) authCont.classList.add('hidden');
-
-      try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-          currentUserData = userDoc.data();
-          
-          // Allow access if status is 'aktivan' OR if status field is missing
-          if (!currentUserData.status || currentUserData.status === "aktivan") {
-            if (pendingCont) pendingCont.classList.add('hidden');
-            if (appCont) appCont.classList.remove('hidden');
-            loadAllLogs();
-          } else {
-            if (pendingCont) pendingCont.classList.remove('hidden');
-            if (appCont) appCont.classList.add('hidden');
-          }
-        } else {
-          // User exists in Auth but not in Firestore 'users' collection yet -> show app directly
-          if (pendingCont) pendingCont.classList.add('hidden');
-          if (appCont) appCont.classList.remove('hidden');
-          loadAllLogs();
-        }
-      } catch (err) {
-        console.error("Firestore user status check failed:", err);
-        // Fallback: Show app container anyway so UI does not freeze
-        if (pendingCont) pendingCont.classList.add('hidden');
-        if (appCont) appCont.classList.remove('hidden');
-        loadAllLogs();
-      }
-    } else {
-      currentUser = null;
-      currentUserData = null;
-      const btnLogout = document.getElementById('btn-logout');
-      const authCont = document.getElementById('auth-container');
-      const appCont = document.getElementById('app-container');
-      const pendingCont = document.getElementById('pending-container');
-
-      if (btnLogout) btnLogout.classList.add('hidden');
-      if (authCont) authCont.classList.remove('hidden');
-      if (appCont) appCont.classList.add('hidden');
-      if (pendingCont) pendingCont.classList.add('hidden');
-    }
-  });
-
-  document.getElementById('auth-toggle-link').addEventListener('click', () => {
-    const reg = document.getElementById('reg-fields');
-    reg.classList.toggle('hidden');
-    const isReg = !reg.classList.contains('hidden');
-    document.getElementById('auth-title').textContent = isReg ? 'Registracija računa' : 'Prijava u sustav';
-    document.getElementById('btn-auth-action').textContent = isReg ? 'Pošalji zahtjev' : 'Prijavi se';
-  });
-
-  document.getElementById('btn-auth-action').addEventListener('click', async () => {
-    const email = document.getElementById('auth-email').value.trim();
-    const password = document.getElementById('auth-password').value;
-    const name = document.getElementById('auth-name').value.trim();
-    const isReg = !document.getElementById('reg-fields').classList.contains('hidden');
-
-    if (!email || !password) return alert("Unesite e-mail i lozinku.");
-
-    try {
-      if (isReg) {
-        if (!name) return alert("Unesite ime.");
-        const res = await createUserWithEmailAndPassword(auth, email, password);
-        await setDoc(doc(db, "users", res.user.uid), {
-          uid: res.user.uid, 
-          email, 
-          ime: name, 
-          uloga: "korisnik", 
-          status: "aktivan", // Auto-activate on signup
-          datum: serverTimestamp()
-        });
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
-      }
-    } catch (e) {
-      alert("Greška: " + e.message);
-    }
-  });
-
-  document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
-
-  let prijemLogs = [];
-  let izdavanjeLogs = [];
-
+  // FIRESTORE SLUŠAČI ZA EVIDENCIJE
   function loadAllLogs() {
     onSnapshot(collection(db, "prijem_evidencija"), (snapshot) => {
       prijemLogs = [];
@@ -743,9 +735,9 @@
       item.innerHTML = `
         <div class="flex justify-between font-bold">
           <span class="${isPrijem ? 'text-green-700' : 'text-red-700'}">
-            ${isPrijem ? '📥 PRIJEM' : '📤 IZDAVANJE'} - ${d.kategorija} ${datumPrikaz}
+            ${isPrijem ? '📥 PRIJEM' : '📤 IZDAVANJE'} - ${d.kategorija || ''} ${datumPrikaz}
           </span>
-          <span class="text-gray-500">${d.odjel}</span>
+          <span class="text-gray-500">${d.odjel || ''}</span>
         </div>
         <p class="text-gray-800"><strong>Stavke:</strong> ${itemsText}</p>
         <p class="text-[10px] text-gray-400">Unio: ${displayAuthor}</p>
@@ -789,11 +781,11 @@
       item.innerHTML = `
         <div class="flex justify-between font-bold">
           <span class="${isPrijem ? 'text-green-700' : 'text-red-700'} text-sm">
-            ${isPrijem ? '📥 PRIJEM' : '📤 IZDAVANJE'} (${d.kategorija})
+            ${isPrijem ? '📥 PRIJEM' : '📤 IZDAVANJE'} (${d.kategorija || ''})
           </span>
           <span class="bg-gray-200 px-2 py-0.5 rounded text-gray-700">${datumPrikaz}</span>
         </div>
-        <p class="text-gray-700 font-semibold">Odjel: <span class="font-normal text-gray-900">${d.odjel}</span></p>
+        <p class="text-gray-700 font-semibold">Odjel: <span class="font-normal text-gray-900">${d.odjel || ''}</span></p>
         <p class="text-gray-800"><strong>Stavke:</strong> ${itemsText}</p>
         <p class="text-[10px] text-gray-400">Unio: ${displayAuthor}</p>
       `;
@@ -801,3 +793,6 @@
     });
   }
 </script>
+
+</body>
+</html>
