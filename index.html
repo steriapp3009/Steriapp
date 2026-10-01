@@ -413,7 +413,7 @@
 
   const departmentsData = {
     "Kirurgija": ["Abdomen (ABD)", "Dječja kirurgija", "Dječja ambulanta", "JIL", "Opća ambulanta", "ORL ambulanta", "ORL odjel", "Ortopedska ambulanta", "Traumatološki odjel", "Traumatološka ambulanta", "Urološka ambulanta", "Urološki odjel", "Vaskularna"],
-    "Ginekologija": ["Gin. odjel", "Novorođenački", "Rađaona", "Rodilište", UZV"],
+    "Ginekologija": ["Gin. odjel", "Novorođenački", "Rađaona", "Rodilište", "UZV"],
     "Interna": ["Int 1 (kardio)", "Int 2b (gastro)", "Int 2a (endokrina)", "Int 3 (nefro)", "Int 4 (pojačana skrb)", "Gastroskopija", "Infektologija"],
     "Vanjski odjeli": ["Citologija", "EMNG", "Hemodijaliza", "KVD", "Laboratorij", "Ljekarna", "Neurologija", "Očna ambulanta", "Očni odjel", "OHBP ORL", "OHBP-HKA", "OHBP-SALA", "Pedijatrija", "Produženo", "Pulmologija", "Pulmološka ambulanta", "RTG"]
   };
@@ -1503,8 +1503,8 @@
 
     const now = new Date();
     const currentHours = String(now.getHours()).padStart(2, '0');
-    const currentMinutes = String(now.getMinutes()).padStart(2, '0');
-    const editTimeFormatted = `${currentHours}:${currentMinutes}`;
+    const currentMinutes = String(now.getMinutes()).padStart(2, 'now'); // min izmjena
+    const editTimeFormatted = `${currentHours}:${String(now.getMinutes()).padStart(2, '0')}`;
 
     try {
       const docRef = doc(db, editingCollection, editingLogId);
