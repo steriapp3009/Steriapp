@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sustav za Evidenciju Instrumenata</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 15px; background: #f4f6f8; color: #333; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+    .nav-tabs { display: flex; gap: 10px; margin: 15px 0; }
+    .tab-btn { flex: 1; padding: 14px; border: none; background: #e0e0e0; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 1rem; }
+    .tab-btn.active-prijem { background: #1976D2; color: white; }
+    .tab-btn.active-izdavanje { background: #388E3C; color: white; }
+    .form-group { margin-bottom: 12px; }
+    label { font-size: 0.9rem; font-weight: bold; display: block; margin-bottom: 4px; }
+    select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; background: white; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 15px; }
+    .card { background: white; border: 1px solid #ddd; padding: 14px 10px; border-radius: 8px; text-align: center; user-select: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; font-size: 0.95rem; }
+    .card:active { background: #e3f2fd; }
+    .card-quick { border-left: 4px solid #1976D2; background: #fafafa; }
+    .sub-menu { display: none; background: #f9f9f9; border: 1px solid #ccc; margin-top: 8px; border-radius: 6px; padding: 5px; text-align: left; }
+    .sub-item { padding: 10px 8px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 0.9rem; }
+    .sub-item:last-child { border-bottom: none; }
+    .sub-item:hover { background: #e0e0e0; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h2>Evidencija Instrumenata</h2>
+    <div id="auth-status" style="font-size: 0.85rem; color: #666;">Prijava...</div>
+  </div>
+
+  <!-- Preklopnik: Prijem / Izdavanje -->
+  <div class="nav-tabs">
+    <button id="btn-prijem" class="tab-btn active-prijem" onclick="setModus('PRIJEM')">PRIJEM</button>
+    <button id="btn-izdavanje" class="tab-btn" onclick="setModus('IZDAVANJE')">IZDAVANJE</button>
+  </div>
+
+  <!-- Izbor Odjela -->
+  <div class="form-group">
+    <label for="select-grupa">Grupa odjela:</label>
+    <select id="select-grupa" onchange="učitajOdjele()">
+      <option value="kirurgija">Kirurgija</option>
+      <option value="ginekologija">Ginekologija</option>
+      <option value="interna">Interna</option>
+      <option value="vanjski">Vanjski odjeli</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="select-odjel">Odjel:</label>
+    <select id="select-odjel"></select>
+  </div>
+
+  <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;">
+
+  <h3>Katalog Instrumenata</h3>
+  <p style="font-size: 0.85rem; color: #666; margin-top: -5px;">Kliknite na grupu za prikaz instrumenata ili odaberite brzi instrument.</p>
+
+  <div class="grid" id="instrumenti-grid"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8M5d_HsX_37ZO2OGnvZvBK-TdzKzPFdk",
+      authDomain: "steriapp-ecbf9.firebaseapp.com",
+      projectId: "steriapp-ecbf9",
+      storageBucket: "steriapp-ecbf9.firebasestorage.app",
+      messagingSenderId: "840912460762",
+      appId: "1:840912460762:web:0c5077e39e3b371430bee3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let trenutniModus = 'PRIJEM';
+
+    const odjeliPoGrupama = {
+      kirurgija: ["Abdomen (ABD)", "Dječja kirurgija", "Dječja ambulanta", "JIL", "Opća ambulanta", "ORL ambulanta", "ORL odjel", "Ortopedska ambulanta", "Traumatološki odjel", "Traumatološka ambulanta", "Urološka ambulanta", "Urološki odjel", "Vaskularna"],
+      ginekologija: ["Gin. odjel", "Novorođenački", "Rađaona", "Rodilište", "UZV"],
+      interna: ["Int 1 (kardio)", "Int 2b (gastro)", "Int 2a (endokrina)", "Int 3 (nefro)", "Int 4 (pojačana skrb)", "Gastroskopija", "Infektologija"],
+      vanjski: ["Citologija", "EMNG", "Hemodijaliza", "KVD", "Laboratorij", "Ljekarna", "Neurologija", "Očna ambulanta", "Očni odjel", "OHBP ORL", "OHBP-HKA", "OHBP-SALA", "Pedijatrija", "Produženo", "Pulmologija", "Pulmološka ambulanta", "RTG"]
+    };
+
+    const instrumentiKatalog = [
+      { naziv: "Pean", podgrupe: null, quick: true },
+      { naziv: "Iglodržač", podgrupe: null, quick: true },
+      { naziv: "Chohlea", podgrupe: null, quick: true },
+      { naziv: "Stapler", podgrupe: null, quick: true },
+      { naziv: "Pincete", podgrupe: ["Anatomska pinceta", "Kirurška pinceta", "Ušna pinceta"] },
+      { naziv: "Škare", podgrupe: ["Škare", "Škare za zavoj"] },
+      { naziv: "Sonde", podgrupe: ["Glavičasta sonda", "Žlijebasta sonda", "Urološke sonde"] },
+      { naziv: "Kliješta", podgrupe: ["Kliješta Luer", "Magillova kliješta"] },
+      { naziv: "Boce", podgrupe: ["V. boca + čep", "M. boca + čep", "Boce sauger", "Boce O2"] },
+      { naziv: "Maske i Dišni", podgrupe: ["Maska O2", "Lar maska", "Airway", "Nazofar tubus"] },
+      { naziv: "Crijeva", podgrupe: ["Crijeva za respirator", "Julijan crijeva"] },
+      { naziv: "Ostali", podgrupe: ["Bubrežasta", "Hvatalica", "Prst kuka", "Špatula", "Drška skalpel", "Sauger", "Dijelovi vac pumpe", "Vodilica"] }
+    ];
+
+    window.učitajOdjele = function() {
+      const grupa = document.getElementById('select-grupa').value;
+      const selectOdjel = document.getElementById('select-odjel');
+      selectOdjel.innerHTML = '';
+      odjeliPoGrupama[grupa].forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o;
+        opt.textContent = o;
+        selectOdjel.appendChild(opt);
+      });
+    };
+
+    window.setModus = function(m) {
+      trenutniModus = m;
+      document.getElementById('btn-prijem').className = m === 'PRIJEM' ? 'tab-btn active-prijem' : 'tab-btn';
+      document.getElementById('btn-izdavanje').className = m === 'IZDAVANJE' ? 'tab-btn active-izdavanje' : 'tab-btn';
+    };
+
+    function prikazKataloga() {
+      const grid = document.getElementById('instrumenti-grid');
+      grid.innerHTML = '';
+      
+      instrumentiKatalog.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = item.quick ? 'card card-quick' : 'card';
+        card.innerHTML = `<strong>${item.naziv}</strong>`;
+
+        if (item.podgrupe) {
+          const subMenu = document.createElement('div');
+          subMenu.className = 'sub-menu';
+          subMenu.id = `sub-${index}`;
+          item.podgrupe.forEach(sub => {
+            subMenu.innerHTML += `<div class="sub-item" onclick="event.stopPropagation(); dodajStavku('${sub}')">${sub}</div>`;
+          });
+          card.appendChild(subMenu);
+
+          card.onclick = () => {
+            const el = document.getElementById(`sub-${index}`);
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+          };
+        } else {
+          card.onclick = () => dodajStavku(item.naziv);
+        }
+
+        grid.appendChild(card);
+      });
+    }
+
+    window.dodajStavku = async function(naziv) {
+      const odjel = document.getElementById('select-odjel').value;
+      const kolicina = prompt(`Unesite količinu za "${naziv}"\n[${trenutniModus}] - Odjel: ${odjel}:`, "1");
+      
+      if (kolicina && !isNaN(kolicina) && parseInt(kolicina) > 0) {
+        try {
+          const kolekcijaIme = trenutniModus === 'PRIJEM' ? 'prijem_evidencija' : 'izdavanje_evidencija';
+          await addDoc(collection(db, kolekcijaIme), {
+            instrument: naziv,
+            kolicina: parseInt(kolicina),
+            odjel: odjel,
+            modus: trenutniModus,
+            datum: serverTimestamp()
+          });
+          alert(`Uspješno spremljeno u bazu: ${kolicina}x ${naziv} [${trenutniModus}] za odjel ${odjel}`);
+        } catch (error) {
+          alert("Greška pri spremanju u bazu: " + error.message);
+        }
+      }
+    };
+
+    učitajOdjele();
+    prikazKataloga();
+  </script>
+</body>
+</html>
