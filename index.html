@@ -21,7 +21,7 @@
   const db = getFirestore(app);
 
   let currentUser = null;
-  let currentUserData = null; // Sprema dodatne podatke (ime, uloga...)
+  let currentUserData = null;
   let currentType = "PRIJEM";
   let selectedCategory = "";
   let selectedDepartment = "";
@@ -323,27 +323,31 @@
     cartItems = [];
   }
 
-  // FIREBASE AUTH
+  // FIREBASE AUTH (CORRECTED LINE 302 HERE)
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       currentUser = user;
       document.getElementById('btn-logout').classList.remove('hidden');
       document.getElementById('auth-container').classList.add('hidden');
 
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (userDoc.exists()) {
-        currentUserData = userDoc.data();
-        if (currentUserData.status === "aktivan") {
-          document.getElementById('pending-container').classList.add('hidden');
-          document.getElementById('app-container').classList.remove('hidden');
-          loadAllLogs();
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          currentUserData = userDoc.data();
+          if (currentUserData.status === "aktivan") {
+            document.getElementById('pending-container').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            loadAllLogs();
+          } else {
+            document.getElementById('pending-container').classList.remove('hidden');
+            document.getElementById('app-container').classList.add('hidden');
+          }
         } else {
           document.getElementById('pending-container').classList.remove('hidden');
           document.getElementById('app-container').classList.add('hidden');
         }
-      } else {
-        document.getElementById('pending-container').classList.remove('hidden');
-        document.getElementById('app-container').classList.add('hidden');
+      } catch (err) {
+        console.error("Error fetching user data:", err);
       }
     } else {
       currentUser = null;
