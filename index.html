@@ -371,21 +371,37 @@
     openQtyModal(val);
   });
 
+// Number Pad Listeners (Digits 0-9)
   document.querySelectorAll('.btn-num').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const num = e.target.getAttribute('data-num');
       const input = document.getElementById('qty-input');
-      if (input.value === "1" || input.value === "0") input.value = num;
-      else input.value += num;
+      
+      if (input.value === "0") {
+        input.value = num;
+      } else {
+        input.value += num;
+      }
     });
   });
 
+  // Clear (C) Button - Clears entire input
   document.getElementById('btn-num-clear').addEventListener('click', () => {
-    document.getElementById('qty-input').value = "1";
+    document.getElementById('qty-input').value = "";
   });
 
+  // Backspace (⌫) Button - Removes last character
+  const btnBackspace = document.getElementById('btn-num-backspace');
+  if (btnBackspace) {
+    btnBackspace.addEventListener('click', () => {
+      const input = document.getElementById('qty-input');
+      input.value = input.value.slice(0, -1);
+    });
+  }
+
+  // Confirm Button - Falls back to 1 if user left input empty
   document.getElementById('btn-num-confirm').addEventListener('click', () => {
-    const qty = parseInt(document.getElementById('qty-input').value) || 1;
+    const qty = parseInt(document.getElementById('qty-input').value, 10) || 1;
     cartItems.push({ naziv: pendingSelectedItem, kolicina: qty });
     updateCartSummary();
     document.getElementById('qty-modal').classList.add('hidden');
@@ -495,12 +511,13 @@
     document.getElementById('custom-item-modal').classList.remove('hidden');
   }
 
+  // Open Modal - starts empty so typing 1 then 2 yields "12"
   function openQtyModal(itemName) {
     pendingSelectedItem = itemName;
     document.getElementById('subgroup-modal').classList.add('hidden');
     document.getElementById('custom-item-modal').classList.add('hidden');
     document.getElementById('qty-item-name').textContent = itemName;
-    document.getElementById('qty-input').value = "1";
+    document.getElementById('qty-input').value = ""; // Clean slate
     document.getElementById('qty-modal').classList.remove('hidden');
   }
 
