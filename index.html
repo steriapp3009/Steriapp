@@ -687,7 +687,7 @@
       confirmNumBtn.addEventListener('click', () => {
         const qty = parseInt(document.getElementById('qty-input').value, 10) || 1;
         
-        // Dodijeli status prema vrsti evidencije (PRIJEM -> zaprimljeno, IZDAVANJE -> izdano)
+        // Osiguraj status prema vrsti evidencije
         const itemStatus = currentType === "PRIJEM" ? "zaprimljeno" : "izdano";
         
         cartItems.push({ 
@@ -1168,9 +1168,26 @@
 
     try {
       if (currentType === "IZDAVANJE") {
-        const issuedSets = cartItems.filter(item => item.isSet);
-        const regularInstruments = cartItems.filter(item => !item.isSet);
+        // Osiguraj da SVAKA stavka u izdavanju ima status "izdano"
+        cartItems.forEach(item => {
+          item.status = "izdano";
+        });
 
+        // Spremi izdavanje u zbirnu bazu izdavanja sa statusom "izdano" za sve stavke
+        await addDoc(collection(db, "izdavanje_evidencija"), {
+          vrsta: "IZDAVANJE",
+          datumEvidencije: selectedDate,
+          vrijemeEvidencije: selectedTime,
+          kategorija: selectedCategory,
+          odjel: selectedDepartment,
+          stavke: cartItems,
+          operaterEmail: currentUser ? currentUser.email : "",
+          operaterIme: operaterIme || currentUser?.email || "Nepoznati operater",
+          datum: serverTimestamp()
+        });
+
+        // Ako su unutar izdavanja i setovi, automatski ažuriraj i status u prijašnjim prijemima ako postoje
+        const issuedSets = cartItems.filter(item => item.isSet);
         if (issuedSets.length > 0) {
           const matchingPrijemLogs = prijemLogs.filter(log => 
             log.datumEvidencije === selectedDate && log.odjel === selectedDepartment
@@ -1194,34 +1211,12 @@
             }
           }
         }
-
-        if (regularInstruments.length > 0) {
-          await addDoc(collection(db, "izdavanje_evidencija"), {
-            vrsta: "IZDAVANJE",
-            datumEvidencije: selectedDate,
-            vrijemeEvidencije: selectedTime,
-            kategorija: selectedCategory,
-            odjel: selectedDepartment,
-            stavke: regularInstruments,
-            operaterEmail: currentUser ? currentUser.email : "",
-            operaterIme: operaterIme || currentUser?.email || "Nepoznati operater",
-            datum: serverTimestamp()
-          });
-        } else if (issuedSets.length > 0) {
-          // Ako su izdavani samo setovi (a nema zasebnih instrumenata u regularnoj košarici, spremi kao običan zapis ili zabilježi)
-          await addDoc(collection(db, "izdavanje_evidencija"), {
-            vrsta: "IZDAVANJE",
-            datumEvidencije: selectedDate,
-            vrijemeEvidencije: selectedTime,
-            kategorija: selectedCategory,
-            odjel: selectedDepartment,
-            stavke: cartItems,
-            operaterEmail: currentUser ? currentUser.email : "",
-            operaterIme: operaterIme || currentUser?.email || "Nepoznati operater",
-            datum: serverTimestamp()
-          });
-        }
       } else {
+        // Prijem – svaka stavka dobiva status "zaprimljeno"
+        cartItems.forEach(item => {
+          item.status = "zaprimljeno";
+        });
+
         await addDoc(collection(db, "prijem_evidencija"), {
           vrsta: "PRIJEM",
           datumEvidencije: selectedDate,
