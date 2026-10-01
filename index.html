@@ -8,7 +8,7 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Manifest & App Icons za PWA -->
+  <!-- Manifest za PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#2563eb">
 </head>
@@ -27,7 +27,7 @@
     </button>
   </header>
 
-  <!-- GLAVNI Sadržaj -->
+  <!-- GLAVNI SADRŽAJ -->
   <main class="flex-grow container mx-auto p-4 max-w-lg flex flex-col justify-center">
 
     <!-- EKRAN 1: PRIJAVA / REGISTRACIJA -->
@@ -79,7 +79,7 @@
     <!-- EKRAN 3: GLAVNA APLIKACIJA -->
     <div id="app-container" class="hidden space-y-6">
       
-      <!-- ADMIN PANEL (Prikazuje se samo administratorima) -->
+      <!-- ADMIN PANEL -->
       <div id="admin-panel" class="hidden bg-purple-50 p-4 rounded-xl border border-purple-200 space-y-3">
         <h3 class="font-bold text-purple-900 text-lg flex items-center gap-2">
           <span>⚙️</span> Admin Panel - Korisnici na čekanju
@@ -89,13 +89,66 @@
         </div>
       </div>
 
-      <!-- GLAVNA FUNKCIONALNOST (Unos/Evidencija) -->
+      <!-- KARTICA S DUGMETOM ZA UNOS -->
       <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center space-y-4">
-        <h2 class="text-xl font-bold text-gray-800">Sterilizacija u tijeku</h2>
-        <p class="text-gray-600 text-sm">Dobrodošli u sustav evidencije sterilizacije.</p>
-        <button class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg shadow transition">
+        <h2 class="text-xl font-bold text-gray-800">Sterilizacija i evidencija</h2>
+        <button onclick="toggleSterilizationForm()" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg shadow transition">
           + Novi unos sterilizacije
         </button>
+      </div>
+
+      <!-- FORMULAR ZA UNOS STERILIZACIJE -->
+      <div id="sterilization-form-container" class="hidden bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
+        <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Novi unos sterilizacije</h3>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Uređaj / Sterilizator</label>
+          <input type="text" id="sterilizer-id" placeholder="npr. Autoklav 1" class="w-full mt-1 p-2 border rounded-lg">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Broj ciklusa / Sharpa</label>
+          <input type="number" id="cycle-number" placeholder="npr. 12" class="w-full mt-1 p-2 border rounded-lg">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Program / Temperatura</label>
+          <select id="program-type" class="w-full mt-1 p-2 border rounded-lg">
+            <option value="134°C - 5 min">134°C - 5 min (Brzi ciklus)</option>
+            <option value="134°C - 18 min">134°C - 18 min (Standard)</option>
+            <option value="121°C - 20 min">121°C - 20 min (Osjetljivo)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Kemijski indikator (Prolaz)</label>
+          <select id="indicator-status" class="w-full mt-1 p-2 border rounded-lg">
+            <option value="USPJEŠNO">USPJEŠNO (Promjena boje)</option>
+            <option value="NEUSPJEŠNO">NEUSPJEŠNO (Pala provjera)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Napomena / Instrumenti</label>
+          <textarea id="steril-note" placeholder="Opis pakiranja ili instrumenata..." class="w-full mt-1 p-2 border rounded-lg"></textarea>
+        </div>
+
+        <div class="flex space-x-2 pt-2">
+          <button onclick="saveSterilizationEntry()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg">
+            Spremi unos
+          </button>
+          <button onclick="toggleSterilizationForm()" class="w-1/2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2.5 rounded-lg">
+            Odustani
+          </button>
+        </div>
+      </div>
+
+      <!-- POVIJEST UNOSA -->
+      <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
+        <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Zadnji unosi</h3>
+        <div id="sterilization-list" class="space-y-3">
+          <p class="text-gray-500 italic text-sm">Učitavanje podataka...</p>
+        </div>
       </div>
 
     </div>
@@ -123,30 +176,31 @@
       setDoc, 
       getDoc, 
       collection, 
+      addDoc,
       query, 
       where, 
+      orderBy,
       onSnapshot, 
       updateDoc,
       serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // PAŽNJA: Zamijeni ove podatke sa svojim Firebase konfiguracijskim podacima iz projekta!
     const firebaseConfig = {
-  apiKey: "AIzaSyD8M5d_HsX_37ZO2OGnvZvBK-TdzKzPFdk",
-  authDomain: "steriapp-ecbf9.firebaseapp.com",
-  projectId: "steriapp-ecbf9",
-  storageBucket: "steriapp-ecbf9.firebasestorage.app",
-  messagingSenderId: "840912460762",
-  appId: "1:840912460762:web:0c5077e39e3b371430bee3"
-};
+      apiKey: "AIzaSyD8M5d_HsX_37ZO2OGnvZvBK-TdzKzPFdk",
+      authDomain: "steriapp-ecbf9.firebaseapp.com",
+      projectId: "steriapp-ecbf9",
+      storageBucket: "steriapp-ecbf9.firebasestorage.app",
+      messagingSenderId: "840912460762",
+      appId: "1:840912460762:web:0c5077e39e3b371430bee3"
+    };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    let currentUser = null;
     let isRegisterMode = false;
 
-    // Prebacivanje modova Prijava / Registracija
     window.toggleAuthMode = function() {
       isRegisterMode = !isRegisterMode;
       const title = document.getElementById('auth-title');
@@ -170,7 +224,6 @@
       }
     };
 
-    // Obrada klika na gumb Prijava/Registracija
     window.handleAuthAction = async function() {
       const email = document.getElementById('auth-email').value.trim();
       const password = document.getElementById('auth-password').value;
@@ -210,12 +263,55 @@
       }
     };
 
-    // Odjava
     window.logout = function() {
       signOut(auth);
     };
 
-    // Praćenje stanja prijave korisnika
+    // Otvaranje / Zatvaranje forme za unos
+    window.toggleSterilizationForm = function() {
+      const form = document.getElementById('sterilization-form-container');
+      form.classList.toggle('hidden');
+    };
+
+    // Spremanje unosa sterilizacije
+    window.saveSterilizationEntry = async function() {
+      const device = document.getElementById('sterilizer-id').value.trim();
+      const cycle = document.getElementById('cycle-number').value.trim();
+      const program = document.getElementById('program-type').value;
+      const indicator = document.getElementById('indicator-status').value;
+      const note = document.getElementById('steril-note').value.trim();
+
+      if (!device || !cycle) {
+        alert("Molimo unesite naziv uređaja i broj ciklusa.");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "sterilizations"), {
+          uređaj: device,
+          ciklus: cycle,
+          program: program,
+          indikator: indicator,
+          napomena: note,
+          operaterUid: currentUser.uid,
+          operaterEmail: currentUser.email,
+          datum: serverTimestamp()
+        });
+
+        alert("Unos uspješno spremljen!");
+        
+        // Resetiraj polja
+        document.getElementById('sterilizer-id').value = '';
+        document.getElementById('cycle-number').value = '';
+        document.getElementById('steril-note').value = '';
+        toggleSterilizationForm();
+
+      } catch (err) {
+        alert("Greška kod spremanja: " + err.message);
+      }
+    };
+
+    // Praćenje Auth stanja
     onAuthStateChanged(auth, async (user) => {
       const authContainer = document.getElementById('auth-container');
       const pendingContainer = document.getElementById('pending-container');
@@ -223,10 +319,10 @@
       const btnLogout = document.getElementById('btn-logout');
 
       if (user) {
+        currentUser = user;
         btnLogout.classList.remove('hidden');
         authContainer.classList.add('hidden');
 
-        // Dohvati status korisnika iz baze
         const userDoc = await getDoc(doc(db, "users", user.uid));
         
         if (userDoc.exists()) {
@@ -236,17 +332,19 @@
             pendingContainer.classList.add('hidden');
             appContainer.classList.remove('hidden');
 
-            // Ako je korisnik ADMIN, učitaj pending korisnike
             if (userData.uloga === "admin") {
               document.getElementById('admin-panel').classList.remove('hidden');
               loadPendingUsers();
             }
+
+            loadSterilizationLogs();
           } else {
             pendingContainer.classList.remove('hidden');
             appContainer.classList.add('hidden');
           }
         }
       } else {
+        currentUser = null;
         btnLogout.classList.add('hidden');
         authContainer.classList.remove('hidden');
         pendingContainer.classList.add('hidden');
@@ -254,7 +352,6 @@
       }
     });
 
-    // Funkcija za Admina - prikaži korisnike na čekanju
     function loadPendingUsers() {
       const q = query(collection(db, "users"), where("status", "==", "na_cekanju"));
       onSnapshot(q, (snapshot) => {
@@ -284,7 +381,38 @@
       });
     }
 
-    // Funkcija za odobravanje korisnika
+    function loadSterilizationLogs() {
+      const q = query(collection(db, "sterilizations"), orderBy("datum", "desc"));
+      onSnapshot(q, (snapshot) => {
+        const listDiv = document.getElementById('sterilization-list');
+        listDiv.innerHTML = "";
+
+        if (snapshot.empty) {
+          listDiv.innerHTML = '<p class="text-gray-500 italic text-sm">Nema zabilježenih unosa.</p>';
+          return;
+        }
+
+        snapshot.forEach((docItem) => {
+          const data = docItem.data();
+          const badgeColor = data.indikator === 'USPJEŠNO' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+          const item = document.createElement('div');
+          item.className = "p-3 border rounded-lg bg-gray-50 flex justify-between items-start text-sm";
+          item.innerHTML = `
+            <div>
+              <p class="font-bold text-gray-800">${data.uređaj} (Ciklus #${data.ciklus})</p>
+              <p class="text-xs text-gray-600">${data.program}</p>
+              ${data.napomena ? `<p class="text-xs text-gray-500 mt-1">📝 ${data.napomena}</p>` : ''}
+              <p class="text-[10px] text-gray-400 mt-1">Unio: ${data.operaterEmail}</p>
+            </div>
+            <span class="px-2 py-1 rounded text-xs font-bold ${badgeColor}">
+              ${data.indikator}
+            </span>
+          `;
+          listDiv.appendChild(item);
+        });
+      });
+    }
+
     window.approveUser = async function(uid) {
       try {
         await updateDoc(doc(db, "users", uid), {
