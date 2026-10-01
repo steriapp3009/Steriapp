@@ -245,341 +245,342 @@
     Steri-app &copy; 2026.
   </footer>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { 
-      getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { 
-      getFirestore, doc, setDoc, getDoc, collection, addDoc, onSnapshot, serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { 
+    getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut 
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { 
+    getFirestore, doc, setDoc, getDoc, collection, addDoc, onSnapshot, serverTimestamp 
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyD8M5d_HsX_37ZO2OGnvZvBK-TdzKzPFdk",
-      authDomain: "steriapp-ecbf9.firebaseapp.com",
-      projectId: "steriapp-ecbf9",
-      storageBucket: "steriapp-ecbf9.firebasestorage.app",
-      messagingSenderId: "840912460762",
-      appId: "1:840912460762:web:0c5077e39e3b371430bee3"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyD8M5d_HsX_37ZO2OGnvZvBK-TdzKzPFdk",
+    authDomain: "steriapp-ecbf9.firebaseapp.com",
+    projectId: "steriapp-ecbf9",
+    storageBucket: "steriapp-ecbf9.firebasestorage.app",
+    messagingSenderId: "840912460762",
+    appId: "1:840912460762:web:0c5077e39e3b371430bee3"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    let currentUser = null;
-    let currentType = "PRIJEM";
-    let selectedCategory = "";
-    let selectedDepartment = "";
-    let cartItems = [];
-    let pendingSelectedItem = "";
+  let currentUser = null;
+  let currentUserData = null; // Sprema dodatne podatke (ime, uloga...)
+  let currentType = "PRIJEM";
+  let selectedCategory = "";
+  let selectedDepartment = "";
+  let cartItems = [];
+  let pendingSelectedItem = "";
 
-    // Stanje za odvojeni pregled povijesti
-    let historyActiveTab = "PRIJEM"; // "PRIJEM" ili "IZDAVANJE"
+  let historyActiveTab = "PRIJEM";
 
-    // Automatsko postavljanje današnjeg datuma u polje
-    const dateInput = document.getElementById('entry-date');
-    if (dateInput) {
-      dateInput.value = new Date().toISOString().split('T')[0];
-    }
+  const dateInput = document.getElementById('entry-date');
+  if (dateInput) {
+    dateInput.value = new Date().toISOString().split('T')[0];
+  }
 
-    const departmentsData = {
-      "Kirurgija": ["Abdomen (ABD)", "Dječja kirurgija", "Dječja ambulanta", "JIL", "Opća ambulanta", "ORL ambulanta", "ORL odjel", "Ortopedska ambulanta", "Traumatološki odjel", "Traumatološka ambulanta", "Urološka ambulanta", "Urološki odjel", "Vaskularna"],
-      "Ginekologija": ["Gin. odjel", "Novorođenački", "Rađaona", "Rodilište", "UZV"],
-      "Interna": ["Int 1 (kardio)", "Int 2b (gastro)", "Int 2a (endokrina)", "Int 3 (nefro)", "Int 4 (pojačana skrb)", "Gastroskopija", "Infektologija"],
-      "Vanjski odjeli": ["Citologija", "EMNG", "Hemodijaliza", "KVD", "Laboratorij", "Ljekarna", "Neurologija", "Očna ambulanta", "Očni odjel", "OHBP ORL", "OHBP-HKA", "OHBP-SALA", "Pedijatrija", "Produženo", "Pulmologija", "Pulmološka ambulanta", "RTG"]
-    };
+  const departmentsData = {
+    "Kirurgija": ["Abdomen (ABD)", "Dječja kirurgija", "Dječja ambulanta", "JIL", "Opća ambulanta", "ORL ambulanta", "ORL odjel", "Ortopedska ambulanta", "Traumatološki odjel", "Traumatološka ambulanta", "Urološka ambulanta", "Urološki odjel", "Vaskularna"],
+    "Ginekologija": ["Gin. odjel", "Novorođenački", "Rađaona", "Rodilište", "UZV"],
+    "Interna": ["Int 1 (kardio)", "Int 2b (gastro)", "Int 2a (endokrina)", "Int 3 (nefro)", "Int 4 (pojačana skrb)", "Gastroskopija", "Infektologija"],
+    "Vanjski odjeli": ["Citologija", "EMNG", "Hemodijaliza", "KVD", "Laboratorij", "Ljekarna", "Neurologija", "Očna ambulanta", "Očni odjel", "OHBP ORL", "OHBP-HKA", "OHBP-SALA", "Pedijatrija", "Produženo", "Pulmologija", "Pulmološka ambulanta", "RTG"]
+  };
 
-    const instrumentsStructure = [
-      { name: "Pincete", hasSub: true, subs: ["Anatomska pinceta", "Kirurška pinceta", "Ušna pinceta"] },
-      { name: "Škare", hasSub: true, subs: ["Škare", "Škare za zavoj"] },
-      { name: "Pean", hasSub: false },
-      { name: "Iglodržač", hasSub: false },
-      { name: "Chohlea", hasSub: false },
-      { name: "Stapler", hasSub: false },
-      { name: "Sonde", hasSub: true, subs: ["Glavičasta sonda", "Žlijebasta sonda", "Urološke sonde"] },
-      { name: "Kliješta", hasSub: true, subs: ["Kliješta Luer", "Magillova kliješta"] },
-      { name: "Boce", hasSub: true, subs: ["V. boca + čep", "M. boca + čep", "Boce sauger", "Boce O2"] },
-      { name: "Maske i Dišni sustav", hasSub: true, subs: ["Maska O2", "Lar maska", "Airway", "Nazofar tubus"] },
-      { name: "Crijeva", hasSub: true, subs: ["Crijeva za respirator", "Julijan crijeva"] },
-      { name: "Ostali instrumenti", hasSub: true, subs: ["Bubrežasta", "Hvatalica", "Prst kuka", "Špatula", "Drška skalpel", "Sauger", "Dijelovi vac pumpe", "Vodilica"] },
-      { name: "Drugo", isCustom: true }
-    ];
+  const instrumentsStructure = [
+    { name: "Pincete", hasSub: true, subs: ["Anatomska pinceta", "Kirurška pinceta", "Ušna pinceta"] },
+    { name: "Škare", hasSub: true, subs: ["Škare", "Škare za zavoj"] },
+    { name: "Pean", hasSub: false },
+    { name: "Iglodržač", hasSub: false },
+    { name: "Chohlea", hasSub: false },
+    { name: "Stapler", hasSub: false },
+    { name: "Sonde", hasSub: true, subs: ["Glavičasta sonda", "Žlijebasta sonda", "Urološke sonde"] },
+    { name: "Kliješta", hasSub: true, subs: ["Kliješta Luer", "Magillova kliješta"] },
+    { name: "Boce", hasSub: true, subs: ["V. boca + čep", "M. boca + čep", "Boce sauger", "Boce O2"] },
+    { name: "Maske i Dišni sustav", hasSub: true, subs: ["Maska O2", "Lar maska", "Airway", "Nazofar tubus"] },
+    { name: "Crijeva", hasSub: true, subs: ["Crijeva za respirator", "Julijan crijeva"] },
+    { name: "Ostali instrumenti", hasSub: true, subs: ["Bubrežasta", "Hvatalica", "Prst kuka", "Špatula", "Drška skalpel", "Sauger", "Dijelovi vac pumpe", "Vodilica"] },
+    { name: "Drugo", isCustom: true }
+  ];
 
-    document.getElementById('btn-prijem').addEventListener('click', () => startFlow("PRIJEM"));
-    document.getElementById('btn-izdavanje').addEventListener('click', () => startFlow("IZDAVANJE"));
-    document.querySelector('.btn-back-main').addEventListener('click', resetToMain);
-    document.getElementById('btn-back-cats').addEventListener('click', showCategories);
-    document.getElementById('btn-cancel-entry').addEventListener('click', resetToMain);
+  document.getElementById('btn-prijem').addEventListener('click', () => startFlow("PRIJEM"));
+  document.getElementById('btn-izdavanje').addEventListener('click', () => startFlow("IZDAVANJE"));
+  document.querySelector('.btn-back-main').addEventListener('click', resetToMain);
+  document.getElementById('btn-back-cats').addEventListener('click', showCategories);
+  document.getElementById('btn-cancel-entry').addEventListener('click', resetToMain);
 
-    // Upravljanje otvaranjem i zatvaranjem ekrana povijesti
-    document.getElementById('btn-open-history').addEventListener('click', () => {
-      document.getElementById('step-main-choice').classList.add('hidden');
-      document.getElementById('step-history-screen').classList.remove('hidden');
-      renderHistoryList();
-    });
+  document.getElementById('btn-open-history').addEventListener('click', () => {
+    document.getElementById('step-main-choice').classList.add('hidden');
+    document.getElementById('step-history-screen').classList.remove('hidden');
+    renderHistoryList();
+  });
 
-    document.getElementById('btn-close-history').addEventListener('click', () => {
-      document.getElementById('step-history-screen').classList.add('hidden');
-      document.getElementById('step-main-choice').classList.remove('hidden');
-    });
+  document.getElementById('btn-close-history').addEventListener('click', () => {
+    document.getElementById('step-history-screen').classList.add('hidden');
+    document.getElementById('step-main-choice').classList.remove('hidden');
+  });
 
-    document.getElementById('btn-hist-prijem').addEventListener('click', () => {
-      historyActiveTab = "PRIJEM";
-      document.getElementById('btn-hist-prijem').className = "bg-green-600 text-white font-bold py-2.5 rounded-lg shadow text-sm transition";
-      document.getElementById('btn-hist-izdavanje').className = "bg-gray-200 text-gray-700 font-bold py-2.5 rounded-lg shadow text-sm transition";
-      renderHistoryList();
-    });
+  document.getElementById('btn-hist-prijem').addEventListener('click', () => {
+    historyActiveTab = "PRIJEM";
+    document.getElementById('btn-hist-prijem').className = "bg-green-600 text-white font-bold py-2.5 rounded-lg shadow text-sm transition";
+    document.getElementById('btn-hist-izdavanje').className = "bg-gray-200 text-gray-700 font-bold py-2.5 rounded-lg shadow text-sm transition";
+    renderHistoryList();
+  });
 
-    document.getElementById('btn-hist-izdavanje').addEventListener('click', () => {
-      historyActiveTab = "IZDAVANJE";
-      document.getElementById('btn-hist-izdavanje').className = "bg-red-600 text-white font-bold py-2.5 rounded-lg shadow text-sm transition";
-      document.getElementById('btn-hist-prijem').className = "bg-gray-200 text-gray-700 font-bold py-2.5 rounded-lg shadow text-sm transition";
-      renderHistoryList();
-    });
+  document.getElementById('btn-hist-izdavanje').addEventListener('click', () => {
+    historyActiveTab = "IZDAVANJE";
+    document.getElementById('btn-hist-izdavanje').className = "bg-red-600 text-white font-bold py-2.5 rounded-lg shadow text-sm transition";
+    document.getElementById('btn-hist-prijem').className = "bg-gray-200 text-gray-700 font-bold py-2.5 rounded-lg shadow text-sm transition";
+    renderHistoryList();
+  });
 
-    document.getElementById('history-filter-date').addEventListener('change', renderHistoryList);
-    document.getElementById('btn-clear-date-filter').addEventListener('click', () => {
-      document.getElementById('history-filter-date').value = "";
-      renderHistoryList();
-    });
+  document.getElementById('history-filter-date').addEventListener('change', renderHistoryList);
+  document.getElementById('btn-clear-date-filter').addEventListener('click', () => {
+    document.getElementById('history-filter-date').value = "";
+    renderHistoryList();
+  });
 
-    document.querySelectorAll('.btn-cat').forEach(btn => {
-      btn.addEventListener('click', (e) => selectCategory(e.target.getAttribute('data-cat')));
-    });
+  document.querySelectorAll('.btn-cat').forEach(btn => {
+    btn.addEventListener('click', (e) => selectCategory(e.target.getAttribute('data-cat')));
+  });
 
-    document.getElementById('btn-open-order').addEventListener('click', () => {
-      document.getElementById('order-sets-modal').classList.toggle('hidden');
-    });
+  document.getElementById('btn-open-order').addEventListener('click', () => {
+    document.getElementById('order-sets-modal').classList.toggle('hidden');
+  });
 
-    document.querySelectorAll('.btn-set-choice').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const setName = e.target.getAttribute('data-set');
-        document.getElementById('order-sets-modal').classList.add('hidden');
-        openQtyModal(setName);
-      });
-    });
-
-    document.getElementById('btn-order-custom').addEventListener('click', () => {
+  document.querySelectorAll('.btn-set-choice').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const setName = e.target.getAttribute('data-set');
       document.getElementById('order-sets-modal').classList.add('hidden');
-      openCustomModal("Unesite naziv narudžbe / seta:");
+      openQtyModal(setName);
     });
+  });
 
-    document.getElementById('btn-custom-item-next').addEventListener('click', () => {
-      const val = document.getElementById('custom-item-input').value.trim();
-      if (!val) return alert("Molimo unesite naziv.");
-      document.getElementById('custom-item-modal').classList.add('hidden');
-      openQtyModal(val);
+  document.getElementById('btn-order-custom').addEventListener('click', () => {
+    document.getElementById('order-sets-modal').classList.add('hidden');
+    openCustomModal("Unesite naziv narudžbe / seta:");
+  });
+
+  document.getElementById('btn-custom-item-next').addEventListener('click', () => {
+    const val = document.getElementById('custom-item-input').value.trim();
+    if (!val) return alert("Molimo unesite naziv.");
+    document.getElementById('custom-item-modal').classList.add('hidden');
+    openQtyModal(val);
+  });
+
+  document.querySelectorAll('.btn-num').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const num = e.target.getAttribute('data-num');
+      const input = document.getElementById('qty-input');
+      if (input.value === "1" || input.value === "0") input.value = num;
+      else input.value += num;
     });
+  });
 
-    document.querySelectorAll('.btn-num').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const num = e.target.getAttribute('data-num');
-        const input = document.getElementById('qty-input');
-        if (input.value === "1" || input.value === "0") input.value = num;
-        else input.value += num;
-      });
+  document.getElementById('btn-num-clear').addEventListener('click', () => {
+    document.getElementById('qty-input').value = "1";
+  });
+
+  document.getElementById('btn-num-confirm').addEventListener('click', () => {
+    const qty = parseInt(document.getElementById('qty-input').value) || 1;
+    cartItems.push({ naziv: pendingSelectedItem, kolicina: qty });
+    updateCartSummary();
+    document.getElementById('qty-modal').classList.add('hidden');
+  });
+
+  document.getElementById('btn-save-final').addEventListener('click', saveFinalEntry);
+
+  function startFlow(type) {
+    currentType = type;
+    cartItems = [];
+    const badge = document.getElementById('badge-evidencija-type');
+    badge.textContent = type;
+    badge.className = type === "PRIJEM" 
+      ? "px-3 py-1 rounded-full text-xs font-bold bg-green-600 text-white"
+      : "px-3 py-1 rounded-full text-xs font-bold bg-red-600 text-white";
+
+    document.getElementById('step-main-choice').classList.add('hidden');
+    showCategories();
+  }
+
+  function showCategories() {
+    document.getElementById('step-categories').classList.remove('hidden');
+    document.getElementById('step-departments').classList.add('hidden');
+    document.getElementById('step-instruments').classList.add('hidden');
+  }
+
+  function selectCategory(cat) {
+    selectedCategory = cat;
+    document.getElementById('step-categories').classList.add('hidden');
+    document.getElementById('step-departments').classList.remove('hidden');
+
+    document.getElementById('departments-title').textContent = `Odjeli - ${cat}`;
+    const listDiv = document.getElementById('departments-list');
+    listDiv.innerHTML = "";
+
+    departmentsData[cat].forEach(dept => {
+      const btn = document.createElement('button');
+      btn.className = "w-full text-left bg-gray-50 hover:bg-blue-50 border p-3 rounded-lg font-medium text-gray-800 text-sm";
+      btn.textContent = dept;
+      btn.onclick = () => selectDepartment(dept);
+      listDiv.appendChild(btn);
     });
+  }
 
-    document.getElementById('btn-num-clear').addEventListener('click', () => {
-      document.getElementById('qty-input').value = "1";
-    });
+  function selectDepartment(dept) {
+    selectedDepartment = dept;
+    document.getElementById('step-departments').classList.add('hidden');
+    document.getElementById('step-instruments').classList.remove('hidden');
+    document.getElementById('selected-dept-label').textContent = `${selectedCategory} → ${selectedDepartment}`;
 
-    document.getElementById('btn-num-confirm').addEventListener('click', () => {
-      const qty = parseInt(document.getElementById('qty-input').value) || 1;
-      cartItems.push({ naziv: pendingSelectedItem, kolicina: qty });
-      updateCartSummary();
-      document.getElementById('qty-modal').classList.add('hidden');
-    });
+    renderInstrumentsMenu();
+    updateCartSummary();
+  }
 
-    document.getElementById('btn-save-final').addEventListener('click', saveFinalEntry);
+  function renderInstrumentsMenu() {
+    const menuDiv = document.getElementById('instruments-menu');
+    menuDiv.innerHTML = "";
 
-    function startFlow(type) {
-      currentType = type;
-      cartItems = [];
-      const badge = document.getElementById('badge-evidencija-type');
-      badge.textContent = type;
-      badge.className = type === "PRIJEM" 
-        ? "px-3 py-1 rounded-full text-xs font-bold bg-green-600 text-white"
-        : "px-3 py-1 rounded-full text-xs font-bold bg-red-600 text-white";
+    instrumentsStructure.forEach(item => {
+      const btn = document.createElement('button');
+      if (item.isCustom) {
+        btn.className = "w-full flex justify-between items-center bg-purple-50 border border-purple-200 p-3 rounded-lg text-sm font-semibold text-purple-900 shadow-sm hover:bg-purple-100";
+        btn.innerHTML = `<span>✏ ${item.name} (Ručni unos)</span> <span class="text-xs text-purple-500">+</span>`;
+        btn.onclick = () => openCustomModal("Unesite naziv instrumenta:");
+      } else {
+        btn.className = "w-full flex justify-between items-center bg-white border p-3 rounded-lg text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-100";
+        btn.innerHTML = `<span>${item.name}</span> <span class="text-xs text-gray-400">${item.hasSub ? '►' : '+'}</span>`;
 
-      document.getElementById('step-main-choice').classList.add('hidden');
-      showCategories();
-    }
-
-    function showCategories() {
-      document.getElementById('step-categories').classList.remove('hidden');
-      document.getElementById('step-departments').classList.add('hidden');
-      document.getElementById('step-instruments').classList.add('hidden');
-    }
-
-    function selectCategory(cat) {
-      selectedCategory = cat;
-      document.getElementById('step-categories').classList.add('hidden');
-      document.getElementById('step-departments').classList.remove('hidden');
-
-      document.getElementById('departments-title').textContent = `Odjeli - ${cat}`;
-      const listDiv = document.getElementById('departments-list');
-      listDiv.innerHTML = "";
-
-      departmentsData[cat].forEach(dept => {
-        const btn = document.createElement('button');
-        btn.className = "w-full text-left bg-gray-50 hover:bg-blue-50 border p-3 rounded-lg font-medium text-gray-800 text-sm";
-        btn.textContent = dept;
-        btn.onclick = () => selectDepartment(dept);
-        listDiv.appendChild(btn);
-      });
-    }
-
-    function selectDepartment(dept) {
-      selectedDepartment = dept;
-      document.getElementById('step-departments').classList.add('hidden');
-      document.getElementById('step-instruments').classList.remove('hidden');
-      document.getElementById('selected-dept-label').textContent = `${selectedCategory} → ${selectedDepartment}`;
-
-      renderInstrumentsMenu();
-      updateCartSummary();
-    }
-
-    function renderInstrumentsMenu() {
-      const menuDiv = document.getElementById('instruments-menu');
-      menuDiv.innerHTML = "";
-
-      instrumentsStructure.forEach(item => {
-        const btn = document.createElement('button');
-        if (item.isCustom) {
-          btn.className = "w-full flex justify-between items-center bg-purple-50 border border-purple-200 p-3 rounded-lg text-sm font-semibold text-purple-900 shadow-sm hover:bg-purple-100";
-          btn.innerHTML = `<span>✏️️ ${item.name} (Ručni unos)</span> <span class="text-xs text-purple-500">+</span>`;
-          btn.onclick = () => openCustomModal("Unesite naziv instrumenta:");
-        } else {
-          btn.className = "w-full flex justify-between items-center bg-white border p-3 rounded-lg text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-100";
-          btn.innerHTML = `<span>${item.name}</span> <span class="text-xs text-gray-400">${item.hasSub ? '►' : '+'}</span>`;
-
-          btn.onclick = () => {
-            if (item.hasSub) {
-              openSubgroupModal(item);
-            } else {
-              openQtyModal(item.name);
-            }
-          };
-        }
-
-        menuDiv.appendChild(btn);
-      });
-    }
-
-    function openSubgroupModal(item) {
-      const modal = document.getElementById('subgroup-modal');
-      const list = document.getElementById('subgroup-list');
-      document.getElementById('subgroup-title').textContent = `Odaberite podvrstu (${item.name}):`;
-      list.innerHTML = "";
-
-      item.subs.forEach(sub => {
-        const btn = document.createElement('button');
-        btn.className = "bg-white hover:bg-blue-100 border p-2.5 rounded-lg text-sm font-semibold text-gray-800 text-left";
-        btn.textContent = sub;
         btn.onclick = () => {
-          modal.classList.add('hidden');
-          openQtyModal(sub);
+          if (item.hasSub) {
+            openSubgroupModal(item);
+          } else {
+            openQtyModal(item.name);
+          }
         };
-        list.appendChild(btn);
+      }
+
+      menuDiv.appendChild(btn);
+    });
+  }
+
+  function openSubgroupModal(item) {
+    const modal = document.getElementById('subgroup-modal');
+    const list = document.getElementById('subgroup-list');
+    document.getElementById('subgroup-title').textContent = `Odaberite podvrstu (${item.name}):`;
+    list.innerHTML = "";
+
+    item.subs.forEach(sub => {
+      const btn = document.createElement('button');
+      btn.className = "bg-white hover:bg-blue-100 border p-2.5 rounded-lg text-sm font-semibold text-gray-800 text-left";
+      btn.textContent = sub;
+      btn.onclick = () => {
+        modal.classList.add('hidden');
+        openQtyModal(sub);
+      };
+      list.appendChild(btn);
+    });
+
+    modal.classList.remove('hidden');
+  }
+
+  function openCustomModal(titleText) {
+    document.getElementById('subgroup-modal').classList.add('hidden');
+    document.getElementById('qty-modal').classList.add('hidden');
+    document.getElementById('custom-item-title').textContent = titleText;
+    document.getElementById('custom-item-input').value = "";
+    document.getElementById('custom-item-modal').classList.remove('hidden');
+  }
+
+  function openQtyModal(itemName) {
+    pendingSelectedItem = itemName;
+    document.getElementById('subgroup-modal').classList.add('hidden');
+    document.getElementById('custom-item-modal').classList.add('hidden');
+    document.getElementById('qty-item-name').textContent = itemName;
+    document.getElementById('qty-input').value = "1";
+    document.getElementById('qty-modal').classList.remove('hidden');
+  }
+
+  function updateCartSummary() {
+    const summaryDiv = document.getElementById('cart-summary');
+    if (cartItems.length === 0) {
+      summaryDiv.innerHTML = '<p class="text-gray-500 italic text-xs">Još niste dodali niti jedan instrument.</p>';
+      return;
+    }
+
+    summaryDiv.innerHTML = "";
+    cartItems.forEach((ci, idx) => {
+      const row = document.createElement('div');
+      row.className = "flex justify-between items-center text-xs border-b pb-1 last:border-0";
+      row.innerHTML = `
+        <span class="font-bold text-gray-800">${ci.naziv}</span>
+        <div class="flex items-center gap-2">
+          <span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded">${ci.kolicina} kom</span>
+          <button class="text-red-500 font-bold text-sm hover:text-red-700" onclick="removeItem(${idx})">✕</button>
+        </div>
+      `;
+      summaryDiv.appendChild(row);
+    });
+  }
+
+  window.removeItem = function(idx) {
+    cartItems.splice(idx, 1);
+    updateCartSummary();
+  };
+
+  async function saveFinalEntry() {
+    if (cartItems.length === 0) {
+      alert("Molimo dodajte bar jedan instrument ili set.");
+      return;
+    }
+
+    const selectedDate = document.getElementById('entry-date').value;
+
+    try {
+      await addDoc(collection(db, currentType === "PRIJEM" ? "prijem_evidencija" : "izdavanje_evidencija"), {
+        vrsta: currentType,
+        datumEvidencije: selectedDate,
+        kategorija: selectedCategory,
+        odjel: selectedDepartment,
+        stavke: cartItems,
+        operaterEmail: currentUser.email,
+        operaterIme: currentUserData?.ime || currentUser.email,
+        datum: serverTimestamp()
       });
 
-      modal.classList.remove('hidden');
+      alert(`Uspješno spremljena evidencija u ${currentType}!`);
+      resetToMain();
+    } catch (err) {
+      alert("Greška kod spremanja: " + err.message);
     }
+  }
 
-    function openCustomModal(titleText) {
-      document.getElementById('subgroup-modal').classList.add('hidden');
-      document.getElementById('qty-modal').classList.add('hidden');
-      document.getElementById('custom-item-title').textContent = titleText;
-      document.getElementById('custom-item-input').value = "";
-      document.getElementById('custom-item-modal').classList.remove('hidden');
-    }
+  function resetToMain() {
+    document.getElementById('step-main-choice').classList.remove('hidden');
+    document.getElementById('step-history-screen').classList.add('hidden');
+    document.getElementById('step-categories').classList.add('hidden');
+    document.getElementById('step-departments').classList.add('hidden');
+    document.getElementById('step-instruments').classList.add('hidden');
+    document.getElementById('subgroup-modal').classList.add('hidden');
+    document.getElementById('custom-item-modal').classList.add('hidden');
+    document.getElementById('qty-modal').classList.add('hidden');
+    document.getElementById('order-sets-modal').classList.add('hidden');
+    cartItems = [];
+  }
 
-    function openQtyModal(itemName) {
-      pendingSelectedItem = itemName;
-      document.getElementById('subgroup-modal').classList.add('hidden');
-      document.getElementById('custom-item-modal').classList.add('hidden');
-      document.getElementById('qty-item-name').textContent = itemName;
-      document.getElementById('qty-input').value = "1";
-      document.getElementById('qty-modal').classList.remove('hidden');
-    }
+  // FIREBASE AUTH
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      document.getElementById('btn-logout').classList.remove('hidden');
+      document.getElementById('auth-container').classList.add('hidden');
 
-    function updateCartSummary() {
-      const summaryDiv = document.getElementById('cart-summary');
-      if (cartItems.length === 0) {
-        summaryDiv.innerHTML = '<p class="text-gray-500 italic text-xs">Još niste dodali niti jedan instrument.</p>';
-        return;
-      }
-
-      summaryDiv.innerHTML = "";
-      cartItems.forEach((ci, idx) => {
-        const row = document.createElement('div');
-        row.className = "flex justify-between items-center text-xs border-b pb-1 last:border-0";
-        row.innerHTML = `
-          <span class="font-bold text-gray-800">${ci.naziv}</span>
-          <div class="flex items-center gap-2">
-            <span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded">${ci.kolicina} kom</span>
-            <button class="text-red-500 font-bold text-sm hover:text-red-700" onclick="removeItem(${idx})">✕</button>
-          </div>
-        `;
-        summaryDiv.appendChild(row);
-      });
-    }
-
-    window.removeItem = function(idx) {
-      cartItems.splice(idx, 1);
-      updateCartSummary();
-    };
-
-    async function saveFinalEntry() {
-      if (cartItems.length === 0) {
-        alert("Molimo dodajte bar jedan instrument ili set.");
-        return;
-      }
-
-      const selectedDate = document.getElementById('entry-date').value;
-
-      try {
-        await addDoc(collection(db, currentType === "PRIJEM" ? "prijem_evidencija" : "izdavanje_evidencija"), {
-          vrsta: currentType,
-          datumEvidencije: selectedDate,
-          kategorija: selectedCategory,
-          odjel: selectedDepartment,
-          stavke: cartItems,
-          operaterEmail: currentUser.email,
-          datum: serverTimestamp()
-        });
-
-        alert(`Uspješno spremljena evidencija u ${currentType}!`);
-        resetToMain();
-      } catch (err) {
-        alert("Greška kod spremanja: " + err.message);
-      }
-    }
-
-    function resetToMain() {
-      document.getElementById('step-main-choice').classList.remove('hidden');
-      document.getElementById('step-history-screen').classList.add('hidden');
-      document.getElementById('step-categories').classList.add('hidden');
-      document.getElementById('step-departments').classList.add('hidden');
-      document.getElementById('step-instruments').classList.add('hidden');
-      document.getElementById('subgroup-modal').classList.add('hidden');
-      document.getElementById('custom-item-modal').classList.add('hidden');
-      document.getElementById('qty-modal').classList.add('hidden');
-      document.getElementById('order-sets-modal').classList.add('hidden');
-      cartItems = [];
-    }
-
-    // FIREBASE AUTH I UCITAVANJE SVIH EVIDENCIJA
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUser = user;
-        document.getElementById('btn-logout').classList.remove('hidden');
-        document.getElementById('auth-container').classList.add('hidden');
-
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists() && userDoc.data().status === "aktivan") {
+      const userDoc = await getDoc(doc(docRef = doc(db, "users", user.uid)));
+      if (userDoc.exists()) {
+        currentUserData = userDoc.data();
+        if (currentUserData.status === "aktivan") {
           document.getElementById('pending-container').classList.add('hidden');
           document.getElementById('app-container').classList.remove('hidden');
           loadAllLogs();
@@ -588,154 +589,156 @@
           document.getElementById('app-container').classList.add('hidden');
         }
       } else {
-        currentUser = null;
-        document.getElementById('btn-logout').classList.add('hidden');
-        document.getElementById('auth-container').classList.remove('hidden');
+        document.getElementById('pending-container').classList.remove('hidden');
         document.getElementById('app-container').classList.add('hidden');
       }
+    } else {
+      currentUser = null;
+      currentUserData = null;
+      document.getElementById('btn-logout').classList.add('hidden');
+      document.getElementById('auth-container').classList.remove('hidden');
+      document.getElementById('app-container').classList.add('hidden');
+    }
+  });
+
+  document.getElementById('auth-toggle-link').addEventListener('click', () => {
+    const reg = document.getElementById('reg-fields');
+    reg.classList.toggle('hidden');
+    const isReg = !reg.classList.contains('hidden');
+    document.getElementById('auth-title').textContent = isReg ? 'Registracija računa' : 'Prijava u sustav';
+    document.getElementById('btn-auth-action').textContent = isReg ? 'Pošalji zahtjev' : 'Prijavi se';
+  });
+
+  document.getElementById('btn-auth-action').addEventListener('click', async () => {
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const name = document.getElementById('auth-name').value.trim();
+    const isReg = !document.getElementById('reg-fields').classList.contains('hidden');
+
+    if (!email || !password) return alert("Unesite e-mail i lozinku.");
+
+    try {
+      if (isReg) {
+        if (!name) return alert("Unesite ime.");
+        const res = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, "users", res.user.uid), {
+          uid: res.user.uid, 
+          email, 
+          ime: name, 
+          uloga: "korisnik", 
+          status: "na_cekanju", 
+          datum: serverTimestamp()
+        });
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
+    } catch (e) {
+      alert("Greška: " + e.message);
+    }
+  });
+
+  document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+  let prijemLogs = [];
+  let izdavanjeLogs = [];
+
+  function loadAllLogs() {
+    onSnapshot(collection(db, "prijem_evidencija"), (snapshot) => {
+      prijemLogs = [];
+      snapshot.forEach(doc => prijemLogs.push({ id: doc.id, ...doc.data() }));
+      renderCombinedLogs();
+      renderHistoryList();
     });
 
-    document.getElementById('auth-toggle-link').addEventListener('click', () => {
-      const reg = document.getElementById('reg-fields');
-      reg.classList.toggle('hidden');
-      const isReg = !reg.classList.contains('hidden');
-      document.getElementById('auth-title').textContent = isReg ? 'Registracija računa' : 'Prijava u sustav';
-      document.getElementById('btn-auth-action').textContent = isReg ? 'Pošalji zahtjev' : 'Prijavi se';
+    onSnapshot(collection(db, "izdavanje_evidencija"), (snapshot) => {
+      izdavanjeLogs = [];
+      snapshot.forEach(doc => izdavanjeLogs.push({ id: doc.id, ...doc.data() }));
+      renderCombinedLogs();
+      renderHistoryList();
+    });
+  }
+
+  function renderCombinedLogs() {
+    const list = document.getElementById('logs-list');
+    list.innerHTML = "";
+
+    const allLogs = [...prijemLogs, ...izdavanjeLogs];
+
+    allLogs.sort((a, b) => {
+      const timeA = a.datum ? a.datum.toMillis() : 0;
+      const timeB = b.datum ? b.datum.toMillis() : 0;
+      return timeB - timeA;
     });
 
-    document.getElementById('btn-auth-action').addEventListener('click', async () => {
-      const email = document.getElementById('auth-email').value.trim();
-      const password = document.getElementById('auth-password').value;
-      const name = document.getElementById('auth-name').value.trim();
-      const isReg = !document.getElementById('reg-fields').classList.contains('hidden');
+    if (allLogs.length === 0) {
+      list.innerHTML = '<p class="text-gray-500 italic text-sm">Nema unosa.</p>';
+      return;
+    }
 
-      if (!email || !password) return alert("Unesite e-mail i lozinku.");
+    allLogs.slice(0, 5).forEach(d => {
+      const item = document.createElement('div');
+      item.className = "p-3 border rounded-lg bg-gray-50 text-xs space-y-1";
+      
+      let itemsText = d.stavke ? d.stavke.map(s => `${s.naziv} (x${s.kolicina})`).join(', ') : '-';
+      const isPrijem = d.vrsta === "PRIJEM";
+      const datumPrikaz = d.datumEvidencije ? ` | Datum: ${d.datumEvidencije}` : '';
 
-      try {
-        if (isReg) {
-          if (!name) return alert("Unesite ime.");
-          const res = await createUserWithEmailAndPassword(auth, email, password);
-          await setDoc(doc(db, "users", res.user.uid), {
-            uid: res.user.uid, email, ime: name, uloga: "korisnik", status: "na_cekanju", datum: serverTimestamp()
-          });
-        } else {
-          await signInWithEmailAndPassword(auth, email, password);
-        }
-      } catch (e) {
-        alert("Greška: " + e.message);
-      }
+      item.innerHTML = `
+        <div class="flex justify-between font-bold">
+          <span class="${isPrijem ? 'text-green-700' : 'text-red-700'}">
+            ${isPrijem ? '📥 PRIJEM' : '📤 IZDAVANJE'} - ${d.kategorija} ${datumPrikaz}
+          </span>
+          <span class="text-gray-500">${d.odjel}</span>
+        </div>
+        <p class="text-gray-800"><strong>Stavke:</strong> ${itemsText}</p>
+        <p class="text-[10px] text-gray-400">Unio: ${d.operaterIme || d.operaterEmail || '-'}</p>
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  function renderHistoryList() {
+    const list = document.getElementById('history-logs-list');
+    list.innerHTML = "";
+
+    let targetLogs = historyActiveTab === "PRIJEM" ? prijemLogs : izdavanjeLogs;
+    const filterDate = document.getElementById('history-filter-date').value;
+
+    if (filterDate) {
+      targetLogs = targetLogs.filter(d => d.datumEvidencije === filterDate);
+    }
+
+    targetLogs.sort((a, b) => {
+      const timeA = a.datum ? a.datum.toMillis() : 0;
+      const timeB = b.datum ? b.datum.toMillis() : 0;
+      return timeB - timeA;
     });
 
-    document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
-
-    // UCITAVANJE ZAPISA IZ OBJE KOLEKCIJE
-    let prijemLogs = [];
-    let izdavanjeLogs = [];
-
-    function loadAllLogs() {
-      onSnapshot(collection(db, "prijem_evidencija"), (snapshot) => {
-        prijemLogs = [];
-        snapshot.forEach(doc => prijemLogs.push({ id: doc.id, ...doc.data() }));
-        renderCombinedLogs();
-        renderHistoryList();
-      });
-
-      onSnapshot(collection(db, "izdavanje_evidencija"), (snapshot) => {
-        izdavanjeLogs = [];
-        snapshot.forEach(doc => izdavanjeLogs.push({ id: doc.id, ...doc.data() }));
-        renderCombinedLogs();
-        renderHistoryList();
-      });
+    if (targetLogs.length === 0) {
+      list.innerHTML = `<p class="text-gray-500 italic text-sm text-center py-4">Nema zapisa za odabrani kriterij.</p>`;
+      return;
     }
 
-    // Prikaz zadnjih nekoliko zapisa na glavnom ekranu
-    function renderCombinedLogs() {
-      const list = document.getElementById('logs-list');
-      list.innerHTML = "";
+    targetLogs.forEach(d => {
+      const item = document.createElement('div');
+      item.className = "p-3 border rounded-lg bg-gray-50 text-xs space-y-1 shadow-sm";
+      
+      let itemsText = d.stavke ? d.stavke.map(s => `${s.naziv} (x${s.kolicina})`).join(', ') : '-';
+      const isPrijem = d.vrsta === "PRIJEM";
+      const datumPrikaz = d.datumEvidencije ? `Datum: ${d.datumEvidencije}` : '';
 
-      const allLogs = [...prijemLogs, ...izdavanjeLogs];
-
-      allLogs.sort((a, b) => {
-        const timeA = a.datum ? a.datum.toMillis() : 0;
-        const timeB = b.datum ? b.datum.toMillis() : 0;
-        return timeB - timeA;
-      });
-
-      if (allLogs.length === 0) {
-        list.innerHTML = '<p class="text-gray-500 italic text-sm">Nema unosa.</p>';
-        return;
-      }
-
-      // Prikazujemo zadnjih 5 unosa na glavnoj stranici
-      allLogs.slice(0, 5).forEach(d => {
-        const item = document.createElement('div');
-        item.className = "p-3 border rounded-lg bg-gray-50 text-xs space-y-1";
-        
-        let itemsText = d.stavke ? d.stavke.map(s => `${s.naziv} (x${s.kolicina})`).join(', ') : '-';
-        const isPrijem = d.vrsta === "PRIJEM";
-        const datumPrikaz = d.datumEvidencije ? ` | Datum: ${d.datumEvidencije}` : '';
-
-        item.innerHTML = `
-          <div class="flex justify-between font-bold">
-            <span class="${isPrijem ? 'text-green-700' : 'text-red-700'}">
-              ${isPrijem ? '📥 PRIJEM' : '📤 IZDAVANJE'} - ${d.kategorija} ${datumPrikaz}
-            </span>
-            <span class="text-gray-500">${d.odjel}</span>
-          </div>
-          <p class="text-gray-800"><strong>Stavke:</strong> ${itemsText}</p>
-          <p class="text-[10px] text-gray-400">Unio: ${d.operaterEmail || '-'}</p>
-        `;
-        list.appendChild(item);
-      });
-    }
-
-    // Prikaz povijesti s odabirom kartice (Prijem / Izdavanje) i filterom po datumu
-    function renderHistoryList() {
-      const list = document.getElementById('history-logs-list');
-      list.innerHTML = "";
-
-      let targetLogs = historyActiveTab === "PRIJEM" ? prijemLogs : izdavanjeLogs;
-      const filterDate = document.getElementById('history-filter-date').value;
-
-      // Filtriranje po datumu ako je upisan
-      if (filterDate) {
-        targetLogs = targetLogs.filter(d => d.datumEvidencije === filterDate);
-      }
-
-      // Sortiranje od najnovijeg prema starijem
-      targetLogs.sort((a, b) => {
-        const timeA = a.datum ? a.datum.toMillis() : 0;
-        const timeB = b.datum ? b.datum.toMillis() : 0;
-        return timeB - timeA;
-      });
-
-      if (targetLogs.length === 0) {
-        list.innerHTML = `<p class="text-gray-500 italic text-sm text-center py-4">Nema zapisa za odabrani kriterij.</p>`;
-        return;
-      }
-
-      targetLogs.forEach(d => {
-        const item = document.createElement('div');
-        item.className = "p-3 border rounded-lg bg-gray-50 text-xs space-y-1 shadow-sm";
-        
-        let itemsText = d.stavke ? d.stavke.map(s => `${s.naziv} (x${s.kolicina})`).join(', ') : '-';
-        const isPrijem = d.vrsta === "PRIJEM";
-        const datumPrikaz = d.datumEvidencije ? `Datum: ${d.datumEvidencije}` : '';
-
-        item.innerHTML = `
-          <div class="flex justify-between font-bold">
-            <span class="${isPrijem ? 'text-green-700' : 'text-red-700'} text-sm">
-              ${isPrijem ? '📥 PRIJEM' : '📤 IZDAVANJE'} (${d.kategorija})
-            </span>
-            <span class="bg-gray-200 px-2 py-0.5 rounded text-gray-700">${datumPrikaz}</span>
-          </div>
-          <p class="text-gray-700 font-semibold">Odjel: <span class="font-normal text-gray-900">${d.odjel}</span></p>
-          <p class="text-gray-800"><strong>Stavke:</strong> ${itemsText}</p>
-          <p class="text-[10px] text-gray-400">Unio: ${d.operaterEmail || '-'}</p>
-        `;
-        list.appendChild(item);
-      });
-    }
-  </script>
-</body>
-</html>
+      item.innerHTML = `
+        <div class="flex justify-between font-bold">
+          <span class="${isPrijem ? 'text-green-700' : 'text-red-700'} text-sm">
+            ${isPrijem ? '📥 PRIJEM' : '📤 IZDAVANJE'} (${d.kategorija})
+          </span>
+          <span class="bg-gray-200 px-2 py-0.5 rounded text-gray-700">${datumPrikaz}</span>
+        </div>
+        <p class="text-gray-700 font-semibold">Odjel: <span class="font-normal text-gray-900">${d.odjel}</span></p>
+        <p class="text-gray-800"><strong>Stavke:</strong> ${itemsText}</p>
+        <p class="text-[10px] text-gray-400">Unio: ${d.operaterIme || d.operaterEmail || '-'}</p>
+      `;
+      list.appendChild(item);
+    });
+  }
+</script>
