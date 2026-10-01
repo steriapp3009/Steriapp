@@ -1186,18 +1186,17 @@
           datum: serverTimestamp()
         });
 
-        // Ako su unutar izdavanja i setovi, automatski ažuriraj i status u prijašnjim prijemima ako postoje
-        const issuedSets = cartItems.filter(item => item.isSet);
-        if (issuedSets.length > 0) {
+        // Automatski ažuriraj status i za setove i za instrumente u prijašnjim prijemima ako postoje
+        if (cartItems.length > 0) {
           const matchingPrijemLogs = prijemLogs.filter(log => 
             log.datumEvidencije === selectedDate && log.odjel === selectedDepartment
           );
 
-          for (const setItem of issuedSets) {
+          for (const cartItem of cartItems) {
             for (const log of matchingPrijemLogs) {
               let logUpdated = false;
               log.stavke.forEach(s => {
-                if (s.isSet && s.naziv === setItem.naziv) {
+                if (s.naziv === cartItem.naziv) {
                   s.status = "izdano";
                   logUpdated = true;
                 }
