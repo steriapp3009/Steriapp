@@ -136,9 +136,9 @@
           </button>
         </div>
 
-        <!-- GUMB ZA NARUDŽBE SETOVA (SAMO ZA ADMIN / MODERATOR) -->
+        <!-- GUMB ZA NARUDŽBE SETOVA (IZMJENJEN NASLOV) -->
         <button id="btn-open-orders-screen" type="button" class="hidden w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl shadow-md text-base transition flex items-center justify-center gap-2">
-          <span>📦</span> Narudžbe setova (Složeno / Izdano)
+          <span>📦</span> Narudžbe setova
         </button>
 
         <!-- GUMB ZA POVIJEST -->
@@ -276,7 +276,7 @@
             <button type="button" class="btn-set-choice bg-white hover:bg-amber-100 border border-amber-300 font-bold p-2.5 rounded-lg text-amber-900" data-set="Set HK">Set HK</button>
           </div>
           <button id="btn-order-custom" type="button" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold p-2.5 rounded-lg text-sm">
-            ✏️️ Drugo (upišite naziv seta)
+            ✏ Drugo (upišite naziv seta)
           </button>
         </div>
 
@@ -367,7 +367,7 @@
   let selectedDepartment = "";
   let cartItems = [];
   let pendingSelectedItem = "";
-  let isAddingSet = false; // Razlikovanje instrumenata i setova
+  let isAddingSet = false;
 
   let historyActiveTab = "PRIJEM";
   let prijemLogs = [];
@@ -377,7 +377,6 @@
   let editingCollection = null;
   let editingItems = [];
 
-  // ADMIN PANEL VARIJABLE
   let allUsersList = [];
   let adminViewPendingOnly = true;
 
@@ -404,7 +403,6 @@
     { name: "Drugo", isCustom: true }
   ];
 
-  // INICIJALIZACIJA DOGAĐAJA
   document.addEventListener("DOMContentLoaded", () => {
     const dateInput = document.getElementById('entry-date');
     if (dateInput) {
@@ -412,7 +410,6 @@
       dateInput.addEventListener('change', () => renderOrdersScreen());
     }
 
-    // TOGGLE REGISTRACIJA / PRIJAVA
     const authToggleBtn = document.getElementById('auth-toggle-link');
     if (authToggleBtn) {
       authToggleBtn.addEventListener('click', () => {
@@ -426,7 +423,6 @@
       });
     }
 
-    // AKCIJA PRIJAVE / REGISTRACIJE
     const btnAuth = document.getElementById('btn-auth-action');
     if (btnAuth) {
       btnAuth.addEventListener('click', async () => {
@@ -459,11 +455,9 @@
       });
     }
 
-    // ODJAVA
     const btnLogout = document.getElementById('btn-logout');
     if (btnLogout) btnLogout.addEventListener('click', () => signOut(auth));
 
-    // ADMIN PANEL NAVIGACIJA
     const btnAdminPanel = document.getElementById('btn-admin-panel');
     if (btnAdminPanel) {
       btnAdminPanel.addEventListener('click', () => {
@@ -482,7 +476,6 @@
       });
     }
 
-    // EKRAN NARUDŽBI SETOVA NAVIGACIJA
     const btnOpenOrders = document.getElementById('btn-open-orders-screen');
     if (btnOpenOrders) {
       btnOpenOrders.addEventListener('click', () => {
@@ -520,7 +513,6 @@
       });
     }
 
-    // NAVIGACIJA
     const btnPrijem = document.getElementById('btn-prijem');
     if (btnPrijem) btnPrijem.addEventListener('click', () => startFlow("PRIJEM"));
 
@@ -536,7 +528,6 @@
     const cancelBtn = document.getElementById('btn-cancel-entry');
     if (cancelBtn) cancelBtn.addEventListener('click', resetToMain);
 
-    // POVIJEST
     const openHistBtn = document.getElementById('btn-open-history');
     if (openHistBtn) {
       openHistBtn.addEventListener('click', () => {
@@ -585,12 +576,10 @@
       });
     }
 
-    // KATEGORIJE
     document.querySelectorAll('.btn-cat').forEach(btn => {
       btn.addEventListener('click', (e) => selectCategory(e.target.getAttribute('data-cat')));
     });
 
-    // MODALI I SETOVI
     const openOrderBtn = document.getElementById('btn-open-order');
     if (openOrderBtn) {
       openOrderBtn.addEventListener('click', () => {
@@ -624,7 +613,6 @@
       });
     }
 
-    // TIPKOVNICA LOGIKA
     document.querySelectorAll('.btn-num').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const num = e.target.getAttribute('data-num');
@@ -656,8 +644,6 @@
     if (confirmNumBtn) {
       confirmNumBtn.addEventListener('click', () => {
         const qty = parseInt(document.getElementById('qty-input').value, 10) || 1;
-        
-        // Postavljanje statusa ovisno o tome je li Prijem ili Izdavanje
         const initialStatus = currentType === "PRIJEM" ? "zaprimljeno" : "izdano";
         
         cartItems.push({ 
@@ -675,7 +661,6 @@
     const saveFinalBtn = document.getElementById('btn-save-final');
     if (saveFinalBtn) saveFinalBtn.addEventListener('click', saveFinalEntry);
 
-    // EVENTI MODALA ZA UREĐIVANJE
     const closeEditBtn = document.getElementById('btn-close-edit');
     if (closeEditBtn) closeEditBtn.addEventListener('click', closeEditModal);
 
@@ -694,7 +679,6 @@
     if (saveEditedBtn) saveEditedBtn.addEventListener('click', saveEditedEntry);
   });
 
-  // ODRŽAVANJE AUTENTIFIKACIJSKOG STANJA
   onAuthStateChanged(auth, async (user) => {
     const btnLogout = document.getElementById('btn-logout');
     const btnAdminPanel = document.getElementById('btn-admin-panel');
@@ -714,7 +698,6 @@
         if (userDoc.exists()) {
           currentUserData = userDoc.data();
           
-          // Prikaži admin gumb ako je korisnik admin
           if (currentUserData.uloga === "admin") {
             if (btnAdminPanel) btnAdminPanel.classList.remove('hidden');
             listenToUsersCollection();
@@ -722,14 +705,12 @@
             if (btnAdminPanel) btnAdminPanel.classList.add('hidden');
           }
 
-          // Prikaži gumb za Narudžbe Setova ako je Admin ili Moderator
           if (currentUserData.uloga === "admin" || currentUserData.uloga === "moderator") {
             if (btnOrdersScreen) btnOrdersScreen.classList.remove('hidden');
           } else {
             if (btnOrdersScreen) btnOrdersScreen.classList.add('hidden');
           }
 
-          // Provjera statusa računa
           if (currentUserData.status === "aktivan" || currentUserData.uloga === "admin") {
             if (pendingCont) pendingCont.classList.add('hidden');
             if (appCont) appCont.classList.remove('hidden');
@@ -761,7 +742,6 @@
     }
   });
 
-  // FIRESTORE SLUŠAČ ZA ADMIN PANEL (KORISNICI)
   function listenToUsersCollection() {
     onSnapshot(collection(db, "users"), (snapshot) => {
       allUsersList = [];
@@ -870,7 +850,6 @@
     });
   }
 
-  // PREGLED I UPRAVLJANJE STATUSIMA NARUDŽBI SETOVA
   function renderOrdersScreen() {
     const list = document.getElementById('orders-list');
     if (!list) return;
@@ -879,7 +858,6 @@
     const selectedDate = document.getElementById('entry-date')?.value;
     const allLogs = [...prijemLogs, ...izdavanjeLogs];
 
-    // Filtriraj zapise za taj datum koji u sebi imaju barem jedan SET
     const dateLogs = allLogs.filter(log => log.datumEvidencije === selectedDate && log.stavke && log.stavke.some(s => s.isSet));
 
     if (dateLogs.length === 0) {
@@ -889,7 +867,7 @@
 
     dateLogs.forEach(log => {
       log.stavke.forEach((item, itemIdx) => {
-        if (!item.isSet) return; // Preskoči obične instrumente
+        if (!item.isSet) return;
 
         const card = document.createElement('div');
         card.className = "p-3 border rounded-lg bg-amber-50/60 border-amber-200 space-y-2 text-xs";
@@ -951,7 +929,6 @@
     });
   }
 
-  // POMOĆNE FUNKCIJE TIJEKA
   function startFlow(type) {
     currentType = type;
     cartItems = [];
@@ -1101,6 +1078,7 @@
     });
   }
 
+  // PRILAGOĐENO SPREMANJE EVIDENCIJE (S PROMJENOM STATUSA PRI IZDAVANJU)
   async function saveFinalEntry() {
     if (cartItems.length === 0) {
       alert("Molimo dodajte bar jedan instrument ili set.");
@@ -1123,16 +1101,62 @@
     }
 
     try {
-      await addDoc(collection(db, currentType === "PRIJEM" ? "prijem_evidencija" : "izdavanje_evidencija"), {
-        vrsta: currentType,
-        datumEvidencije: selectedDate,
-        kategorija: selectedCategory,
-        odjel: selectedDepartment,
-        stavke: cartItems,
-        operaterEmail: currentUser ? currentUser.email : "",
-        operaterIme: operaterIme || currentUser?.email || "Nepoznati operater",
-        datum: serverTimestamp()
-      });
+      if (currentType === "IZDAVANJE") {
+        // Kod Izdavanja izdvajamo setove i obične instrumente
+        const issuedSets = cartItems.filter(item => item.isSet);
+        const regularInstruments = cartItems.filter(item => !item.isSet);
+
+        // Ažuriranje statusa postojećih setova na 'izdano' u prijem_evidencija
+        if (issuedSets.length > 0) {
+          const matchingPrijemLogs = prijemLogs.filter(log => 
+            log.datumEvidencije === selectedDate && log.odjel === selectedDepartment
+          );
+
+          for (const setItem of issuedSets) {
+            for (const log of matchingPrijemLogs) {
+              let logUpdated = false;
+              log.stavke.forEach(s => {
+                if (s.isSet && s.naziv === setItem.naziv) {
+                  s.status = "izdano";
+                  logUpdated = true;
+                }
+              });
+
+              if (logUpdated) {
+                await updateDoc(doc(db, "prijem_evidencija", log.id), {
+                  stavke: log.stavke
+                });
+              }
+            }
+          }
+        }
+
+        // Ako postoje i obični instrumenti (koji nisu setovi), zapisujemo ih u izdavanje_evidencija
+        if (regularInstruments.length > 0) {
+          await addDoc(collection(db, "izdavanje_evidencija"), {
+            vrsta: "IZDAVANJE",
+            datumEvidencije: selectedDate,
+            kategorija: selectedCategory,
+            odjel: selectedDepartment,
+            stavke: regularInstruments,
+            operaterEmail: currentUser ? currentUser.email : "",
+            operaterIme: operaterIme || currentUser?.email || "Nepoznati operater",
+            datum: serverTimestamp()
+          });
+        }
+      } else {
+        // Normalni PRIJEM
+        await addDoc(collection(db, "prijem_evidencija"), {
+          vrsta: "PRIJEM",
+          datumEvidencije: selectedDate,
+          kategorija: selectedCategory,
+          odjel: selectedDepartment,
+          stavke: cartItems,
+          operaterEmail: currentUser ? currentUser.email : "",
+          operaterIme: operaterIme || currentUser?.email || "Nepoznati operater",
+          datum: serverTimestamp()
+        });
+      }
 
       alert(`Uspješno spremljena evidencija u ${currentType}!`);
       resetToMain();
@@ -1156,7 +1180,6 @@
     cartItems = [];
   }
 
-  // FIRESTORE SLUŠAČI ZA EVIDENCIJE
   function loadAllLogs() {
     onSnapshot(collection(db, "prijem_evidencija"), (snapshot) => {
       prijemLogs = [];
@@ -1175,7 +1198,6 @@
     }, (err) => console.error("Snapshot error (izdavanje):", err));
   }
 
-  // PROVJERA OVLASTI ZA EDITIRANJE (ADMIN ILI MODERATOR)
   function canUserEdit() {
     const role = currentUserData?.uloga;
     return role === "admin" || role === "moderator";
@@ -1281,7 +1303,6 @@
     attachEditListeners();
   }
 
-  // LOGIKA UREĐIVANJA (MODAL & FIRESTORE)
   function attachEditListeners() {
     document.querySelectorAll('.btn-edit-log').forEach(btn => {
       btn.addEventListener('click', (e) => {
