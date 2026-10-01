@@ -233,6 +233,38 @@
         </div>
       </div>
 
+      <!-- MODAL ZA UREĐIVANJE ZAPISA (ZA ADMIN / MODERATOR) -->
+      <div id="edit-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+          <div class="flex justify-between items-center border-b pb-2">
+            <h3 class="text-lg font-bold text-gray-800">Uredi zapis</h3>
+            <button id="btn-close-edit" type="button" class="text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-600">Datum evidencije:</label>
+            <input type="date" id="edit-date" class="w-full mt-1 p-2 border rounded-lg text-sm">
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-gray-600">Stavke zapisa:</label>
+            <div id="edit-items-container" class="space-y-2"></div>
+            <button id="btn-edit-add-item" type="button" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-1.5 rounded-lg text-xs">
+              + Dodaj novu stavku
+            </button>
+          </div>
+
+          <div class="pt-4 border-t flex space-x-2">
+            <button id="btn-save-edited-entry" type="button" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-sm shadow">
+              Spremi izmjene
+            </button>
+            <button id="btn-cancel-edit" type="button" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2.5 rounded-lg text-sm">
+              Odustani
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- POVIJEST EVIDENCIJE NA GLAVNOM EKRANU -->
       <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
         <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Zadnje evidencije</h3>
@@ -255,7 +287,7 @@
     getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut 
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import { 
-    getFirestore, doc, setDoc, getDoc, collection, addDoc, onSnapshot, serverTimestamp 
+    getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, onSnapshot, serverTimestamp 
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -282,6 +314,10 @@
   let historyActiveTab = "PRIJEM";
   let prijemLogs = [];
   let izdavanjeLogs = [];
+
+  let editingLogId = null;
+  let editingCollection = null;
+  let editingItems = [];
 
   const departmentsData = {
     "Kirurgija": ["Abdomen (ABD)", "Dječja kirurgija", "Dječja ambulanta", "JIL", "Opća ambulanta", "ORL ambulanta", "ORL odjel", "Ortopedska ambulanta", "Traumatološki odjel", "Traumatološka ambulanta", "Urološka ambulanta", "Urološki odjel", "Vaskularna"],
@@ -507,6 +543,24 @@
 
     const saveFinalBtn = document.getElementById('btn-save-final');
     if (saveFinalBtn) saveFinalBtn.addEventListener('click', saveFinalEntry);
+
+    // EVENTI MODALA ZA UREĐIVANJE
+    const closeEditBtn = document.getElementById('btn-close-edit');
+    if (closeEditBtn) closeEditBtn.addEventListener('click', closeEditModal);
+
+    const cancelEditBtn = document.getElementById('btn-cancel-edit');
+    if (cancelEditBtn) cancelEditBtn.addEventListener('click', closeEditModal);
+
+    const addItemEditBtn = document.getElementById('btn-edit-add-item');
+    if (addItemEditBtn) {
+      addItemEditBtn.addEventListener('click', () => {
+        editingItems.push({ naziv: "Novi instrument", kolicina: 1 });
+        renderEditModalItems();
+      });
+    }
+
+    const saveEditedBtn = document.getElementById('btn-save-edited-entry');
+    if (saveEditedBtn) saveEditedBtn.addEventListener('click', saveEditedEntry);
   });
 
   // ODRŽAVANJE AUTENTIFIKACIJSKOG STANJA
@@ -539,7 +593,7 @@
           loadAllLogs();
         }
       } catch (e) {
-        console.error("Greška provjere korisinika:", e);
+        console.error("Greška provjere korisnika:", e);
         if (pendingCont) pendingCont.classList.add('hidden');
         if (appCont) appCont.classList.remove('hidden');
         loadAllLogs();
@@ -759,17 +813,23 @@
   function loadAllLogs() {
     onSnapshot(collection(db, "prijem_evidencija"), (snapshot) => {
       prijemLogs = [];
-      snapshot.forEach(doc => prijemLogs.push({ id: doc.id, ...doc.data() }));
+      snapshot.forEach(doc => prijemLogs.push({ id: doc.id, collectionName: "prijem_evidencija", ...doc.data() }));
       renderCombinedLogs();
       renderHistoryList();
     }, (err) => console.error("Snapshot error (prijem):", err));
 
     onSnapshot(collection(db, "izdavanje_evidencija"), (snapshot) => {
       izdavanjeLogs = [];
-      snapshot.forEach(doc => izdavanjeLogs.push({ id: doc.id, ...doc.data() }));
+      snapshot.forEach(doc => izdavanjeLogs.push({ id: doc.id, collectionName: "izdavanje_evidencija", ...doc.data() }));
       renderCombinedLogs();
       renderHistoryList();
     }, (err) => console.error("Snapshot error (izdavanje):", err));
+  }
+
+  // PROVJERA OVLASTI ZA EDITIRANJE (ADMIN ILI MODERATOR)
+  function canUserEdit() {
+    const role = currentUserData?.uloga;
+    return role === "admin" || role === "moderator";
   }
 
   function renderCombinedLogs() {
@@ -790,27 +850,33 @@
       return;
     }
 
+    const showEdit = canUserEdit();
+
     allLogs.slice(0, 5).forEach(d => {
       const item = document.createElement('div');
-      item.className = "p-3 border rounded-lg bg-gray-50 text-xs space-y-1";
+      item.className = "p-3 border rounded-lg bg-gray-50 text-xs space-y-1 relative";
       
       let itemsText = d.stavke ? d.stavke.map(s => `${s.naziv} (x${s.kolicina})`).join(', ') : '-';
       const isPrijem = d.vrsta === "PRIJEM";
       const datumPrikaz = d.datumEvidencije ? ` | Datum: ${d.datumEvidencije}` : '';
       const displayAuthor = d.operaterIme || d.operaterEmail || '-';
+      const lastEditedText = d.zadnjeUredio ? ` <span class="text-indigo-600">(Uredio: ${d.zadnjeUredio})</span>` : '';
 
       item.innerHTML = `
-        <div class="flex justify-between font-bold">
+        <div class="flex justify-between items-center font-bold pr-6">
           <span class="${isPrijem ? 'text-green-700' : 'text-red-700'}">
             ${isPrijem ? '📥 PRIJEM' : '📤 IZDAVANJE'} - ${d.kategorija || ''} ${datumPrikaz}
           </span>
           <span class="text-gray-500">${d.odjel || ''}</span>
         </div>
         <p class="text-gray-800"><strong>Stavke:</strong> ${itemsText}</p>
-        <p class="text-[10px] text-gray-400">Unio: ${displayAuthor}</p>
+        <p class="text-[10px] text-gray-400">Unio: ${displayAuthor}${lastEditedText}</p>
+        ${showEdit ? `<button type="button" class="btn-edit-log absolute top-2 right-2 text-blue-600 hover:text-blue-800 font-bold text-sm" data-id="${d.id}" data-coll="${d.collectionName}">✏️</button>` : ''}
       `;
       list.appendChild(item);
     });
+
+    attachEditListeners();
   }
 
   function renderHistoryList() {
@@ -836,17 +902,20 @@
       return;
     }
 
+    const showEdit = canUserEdit();
+
     targetLogs.forEach(d => {
       const item = document.createElement('div');
-      item.className = "p-3 border rounded-lg bg-gray-50 text-xs space-y-1 shadow-sm";
+      item.className = "p-3 border rounded-lg bg-gray-50 text-xs space-y-1 shadow-sm relative";
       
       let itemsText = d.stavke ? d.stavke.map(s => `${s.naziv} (x${s.kolicina})`).join(', ') : '-';
       const isPrijem = d.vrsta === "PRIJEM";
       const datumPrikaz = d.datumEvidencije ? `Datum: ${d.datumEvidencije}` : '';
       const displayAuthor = d.operaterIme || d.operaterEmail || '-';
+      const lastEditedText = d.zadnjeUredio ? ` <span class="text-indigo-600">(Uredio: ${d.zadnjeUredio})</span>` : '';
 
       item.innerHTML = `
-        <div class="flex justify-between font-bold">
+        <div class="flex justify-between items-center font-bold pr-6">
           <span class="${isPrijem ? 'text-green-700' : 'text-red-700'} text-sm">
             ${isPrijem ? '📥 PRIJEM' : '📤 IZDAVANJE'} (${d.kategorija || ''})
           </span>
@@ -854,10 +923,113 @@
         </div>
         <p class="text-gray-700 font-semibold">Odjel: <span class="font-normal text-gray-900">${d.odjel || ''}</span></p>
         <p class="text-gray-800"><strong>Stavke:</strong> ${itemsText}</p>
-        <p class="text-[10px] text-gray-400">Unio: ${displayAuthor}</p>
+        <p class="text-[10px] text-gray-400">Unio: ${displayAuthor}${lastEditedText}</p>
+        ${showEdit ? `<button type="button" class="btn-edit-log absolute top-2 right-2 text-blue-600 hover:text-blue-800 font-bold text-sm" data-id="${d.id}" data-coll="${d.collectionName}">✏️️</button>` : ''}
       `;
       list.appendChild(item);
     });
+
+    attachEditListeners();
+  }
+
+  // LOGIKA UREĐIVANJA (MODAL & FIRESTORE)
+  function attachEditListeners() {
+    document.querySelectorAll('.btn-edit-log').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.target.getAttribute('data-id');
+        const coll = e.target.getAttribute('data-coll');
+        openEditModal(id, coll);
+      });
+    });
+  }
+
+  function openEditModal(id, collectionName) {
+    editingLogId = id;
+    editingCollection = collectionName;
+
+    const sourceList = collectionName === "prijem_evidencija" ? prijemLogs : izdavanjeLogs;
+    const logData = sourceList.find(item => item.id === id);
+
+    if (!logData) return alert("Zapis nije pronađen.");
+
+    document.getElementById('edit-date').value = logData.datumEvidencije || new Date().toISOString().split('T')[0];
+    editingItems = logData.stavke ? JSON.parse(JSON.stringify(logData.stavke)) : [];
+
+    renderEditModalItems();
+    document.getElementById('edit-modal').classList.remove('hidden');
+  }
+
+  function renderEditModalItems() {
+    const container = document.getElementById('edit-items-container');
+    container.innerHTML = "";
+
+    editingItems.forEach((item, index) => {
+      const row = document.createElement('div');
+      row.className = "flex gap-2 items-center bg-gray-50 p-2 border rounded-lg";
+      row.innerHTML = `
+        <input type="text" value="${item.naziv}" class="edit-item-name flex-grow p-1.5 border rounded text-xs" data-idx="${index}">
+        <input type="number" min="1" value="${item.kolicina}" class="edit-item-qty w-16 p-1.5 border rounded text-xs text-center" data-idx="${index}">
+        <button type="button" class="btn-remove-edit-item text-red-500 font-bold text-sm px-1" data-idx="${index}">✕</button>
+      `;
+      container.appendChild(row);
+    });
+
+    // Slušači za promjene u poljima
+    container.querySelectorAll('.edit-item-name').forEach(inp => {
+      inp.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+        editingItems[idx].naziv = e.target.value;
+      });
+    });
+
+    container.querySelectorAll('.edit-item-qty').forEach(inp => {
+      inp.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+        editingItems[idx].kolicina = parseInt(e.target.value, 10) || 1;
+      });
+    });
+
+    container.querySelectorAll('.btn-remove-edit-item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+        editingItems.splice(idx, 1);
+        renderEditModalItems();
+      });
+    });
+  }
+
+  function closeEditModal() {
+    document.getElementById('edit-modal').classList.add('hidden');
+    editingLogId = null;
+    editingCollection = null;
+    editingItems = [];
+  }
+
+  async function saveEditedEntry() {
+    if (!editingLogId || !editingCollection) return;
+
+    if (editingItems.length === 0) {
+      alert("Zapis mora sadržavati barem jednu stavku.");
+      return;
+    }
+
+    const updatedDate = document.getElementById('edit-date').value;
+    const editorName = currentUserData?.ime || currentUser?.email || "Moderator";
+
+    try {
+      const docRef = doc(db, editingCollection, editingLogId);
+      await updateDoc(docRef, {
+        datumEvidencije: updatedDate,
+        stavke: editingItems,
+        zadnjeUredio: editorName,
+        datumUredivanja: serverTimestamp()
+      });
+
+      alert("Zapis je uspješno ažuriran!");
+      closeEditModal();
+    } catch (err) {
+      alert("Greška pri ažuriranju zapisa: " + err.message);
+    }
   }
 </script>
 
