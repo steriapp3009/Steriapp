@@ -538,7 +538,6 @@
 
     const selectedDate = document.getElementById('entry-date').value;
 
-    // Fetch user details dynamically if currentUserData is missing
     let operaterIme = currentUserData?.ime;
     if (!operaterIme && currentUser) {
       try {
@@ -584,38 +583,58 @@
     cartItems = [];
   }
 
-  // FIREBASE AUTH (FETCHES USER DOC BEFORE DISPLAYING LOGS)
+  // ROBUST AUTH & SCREEN STATE CONTROLLER
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       currentUser = user;
-      document.getElementById('btn-logout').classList.remove('hidden');
-      document.getElementById('auth-container').classList.add('hidden');
+      
+      const btnLogout = document.getElementById('btn-logout');
+      const authCont = document.getElementById('auth-container');
+      const pendingCont = document.getElementById('pending-container');
+      const appCont = document.getElementById('app-container');
+
+      if (btnLogout) btnLogout.classList.remove('hidden');
+      if (authCont) authCont.classList.add('hidden');
 
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
           currentUserData = userDoc.data();
-          if (currentUserData.status === "aktivan") {
-            document.getElementById('pending-container').classList.add('hidden');
-            document.getElementById('app-container').classList.remove('hidden');
+          
+          // Allow access if status is 'aktivan' OR if status field is missing
+          if (!currentUserData.status || currentUserData.status === "aktivan") {
+            if (pendingCont) pendingCont.classList.add('hidden');
+            if (appCont) appCont.classList.remove('hidden');
             loadAllLogs();
           } else {
-            document.getElementById('pending-container').classList.remove('hidden');
-            document.getElementById('app-container').classList.add('hidden');
+            if (pendingCont) pendingCont.classList.remove('hidden');
+            if (appCont) appCont.classList.add('hidden');
           }
         } else {
-          document.getElementById('pending-container').classList.remove('hidden');
-          document.getElementById('app-container').classList.add('hidden');
+          // User exists in Auth but not in Firestore 'users' collection yet -> show app directly
+          if (pendingCont) pendingCont.classList.add('hidden');
+          if (appCont) appCont.classList.remove('hidden');
+          loadAllLogs();
         }
       } catch (err) {
-        console.error("Error fetching user data:", err);
+        console.error("Firestore user status check failed:", err);
+        // Fallback: Show app container anyway so UI does not freeze
+        if (pendingCont) pendingCont.classList.add('hidden');
+        if (appCont) appCont.classList.remove('hidden');
+        loadAllLogs();
       }
     } else {
       currentUser = null;
       currentUserData = null;
-      document.getElementById('btn-logout').classList.add('hidden');
-      document.getElementById('auth-container').classList.remove('hidden');
-      document.getElementById('app-container').classList.add('hidden');
+      const btnLogout = document.getElementById('btn-logout');
+      const authCont = document.getElementById('auth-container');
+      const appCont = document.getElementById('app-container');
+      const pendingCont = document.getElementById('pending-container');
+
+      if (btnLogout) btnLogout.classList.add('hidden');
+      if (authCont) authCont.classList.remove('hidden');
+      if (appCont) appCont.classList.add('hidden');
+      if (pendingCont) pendingCont.classList.add('hidden');
     }
   });
 
@@ -644,7 +663,7 @@
           email, 
           ime: name, 
           uloga: "korisnik", 
-          status: "na_cekanju", 
+          status: "aktivan", // Auto-activate on signup
           datum: serverTimestamp()
         });
       } else {
@@ -666,18 +685,19 @@
       snapshot.forEach(doc => prijemLogs.push({ id: doc.id, ...doc.data() }));
       renderCombinedLogs();
       renderHistoryList();
-    });
+    }, (err) => console.error("Snapshot error (prijem):", err));
 
     onSnapshot(collection(db, "izdavanje_evidencija"), (snapshot) => {
       izdavanjeLogs = [];
       snapshot.forEach(doc => izdavanjeLogs.push({ id: doc.id, ...doc.data() }));
       renderCombinedLogs();
       renderHistoryList();
-    });
+    }, (err) => console.error("Snapshot error (izdavanje):", err));
   }
 
   function renderCombinedLogs() {
     const list = document.getElementById('logs-list');
+    if (!list) return;
     list.innerHTML = "";
 
     const allLogs = [...prijemLogs, ...izdavanjeLogs];
@@ -718,10 +738,11 @@
 
   function renderHistoryList() {
     const list = document.getElementById('history-logs-list');
+    if (!list) return;
     list.innerHTML = "";
 
     let targetLogs = historyActiveTab === "PRIJEM" ? prijemLogs : izdavanjeLogs;
-    const filterDate = document.getElementById('history-filter-date').value;
+    const filterDate = document.getElementById('history-filter-date')?.value;
 
     if (filterDate) {
       targetLogs = targetLogs.filter(d => d.datumEvidencije === filterDate);
