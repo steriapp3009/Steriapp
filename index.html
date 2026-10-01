@@ -136,7 +136,7 @@
           </button>
         </div>
 
-        <!-- GUMB ZA NARUDŽBE SETOVA (IZMJENJEN NASLOV) -->
+        <!-- GUMB ZA NARUDŽBE SETOVA -->
         <button id="btn-open-orders-screen" type="button" class="hidden w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl shadow-md text-base transition flex items-center justify-center gap-2">
           <span>📦</span> Narudžbe setova
         </button>
@@ -303,12 +303,31 @@
             <input type="date" id="edit-date" class="w-full mt-1 p-2 border rounded-lg text-sm">
           </div>
 
+          <!-- DODAVANJE STAVKI IZ DROPDOWN MENIJA -->
+          <div class="space-y-3 bg-gray-50 p-3 rounded-lg border">
+            <label class="block text-xs font-bold text-gray-700">Dodaj stavku u izmjenu:</label>
+            
+            <div class="flex gap-2">
+              <select id="edit-select-type" class="w-1/3 p-2 border rounded-lg text-xs font-semibold bg-white">
+                <option value="instrument">Instrument</option>
+                <option value="set">Set / Narudžba</option>
+              </select>
+
+              <select id="edit-select-item" class="w-2/3 p-2 border rounded-lg text-xs bg-white"></select>
+            </div>
+
+            <div class="flex gap-2 items-center">
+              <input type="number" id="edit-add-qty" min="1" value="1" placeholder="Količina" class="w-1/2 p-2 border rounded-lg text-xs text-center bg-white">
+              <button id="btn-edit-add-item-from-select" type="button" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-xs">
+                + Dodaj na popis
+              </button>
+            </div>
+          </div>
+
+          <!-- LISTA DODANIH/UREĐENIH STAVKI -->
           <div class="space-y-2">
-            <label class="block text-xs font-bold text-gray-600">Stavke zapisa:</label>
+            <label class="block text-xs font-bold text-gray-600">Trenutne stavke zapisa:</label>
             <div id="edit-items-container" class="space-y-2"></div>
-            <button id="btn-edit-add-item" type="button" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-1.5 rounded-lg text-xs">
-              + Dodaj novu stavku
-            </button>
           </div>
 
           <div class="pt-4 border-t flex space-x-2">
@@ -402,6 +421,8 @@
     { name: "Ostali instrumenti", hasSub: true, subs: ["Bubrežasta", "Hvatalica", "Prst kuka", "Špatula", "Drška skalpel", "Sauger", "Dijelovi vac pumpe", "Vodilica"] },
     { name: "Drugo", isCustom: true }
   ];
+
+  const availableSetsList = ["Set MSBI", "Set SBI", "Set UK", "Set HK"];
 
   document.addEventListener("DOMContentLoaded", () => {
     const dateInput = document.getElementById('entry-date');
@@ -667,10 +688,30 @@
     const cancelEditBtn = document.getElementById('btn-cancel-edit');
     if (cancelEditBtn) cancelEditBtn.addEventListener('click', closeEditModal);
 
-    const addItemEditBtn = document.getElementById('btn-edit-add-item');
-    if (addItemEditBtn) {
-      addItemEditBtn.addEventListener('click', () => {
-        editingItems.push({ naziv: "Novi instrument", kolicina: 1, isSet: false });
+    const editSelectType = document.getElementById('edit-select-type');
+    if (editSelectType) {
+      editSelectType.addEventListener('change', populateEditDropdownItems);
+    }
+
+    const addSelectEditBtn = document.getElementById('btn-edit-add-item-from-select');
+    if (addSelectEditBtn) {
+      addSelectEditBtn.addEventListener('click', () => {
+        const type = document.getElementById('edit-select-type').value;
+        const itemName = document.getElementById('edit-select-item').value;
+        const qty = parseInt(document.getElementById('edit-add-qty').value, 10) || 1;
+
+        if (!itemName) return alert("Odaberite stavku.");
+
+        const isSet = type === "set";
+        const setStatus = editingCollection === "prijem_evidencija" ? "zaprimljeno" : "izdano";
+
+        editingItems.push({
+          naziv: itemName,
+          kolicina: qty,
+          isSet: isSet,
+          status: isSet ? setStatus : null
+        });
+
         renderEditModalItems();
       });
     }
@@ -1078,7 +1119,6 @@
     });
   }
 
-  // PRILAGOĐENO SPREMANJE EVIDENCIJE (S PROMJENOM STATUSA PRI IZDAVANJU)
   async function saveFinalEntry() {
     if (cartItems.length === 0) {
       alert("Molimo dodajte bar jedan instrument ili set.");
@@ -1102,11 +1142,9 @@
 
     try {
       if (currentType === "IZDAVANJE") {
-        // Kod Izdavanja izdvajamo setove i obične instrumente
         const issuedSets = cartItems.filter(item => item.isSet);
         const regularInstruments = cartItems.filter(item => !item.isSet);
 
-        // Ažuriranje statusa postojećih setova na 'izdano' u prijem_evidencija
         if (issuedSets.length > 0) {
           const matchingPrijemLogs = prijemLogs.filter(log => 
             log.datumEvidencije === selectedDate && log.odjel === selectedDepartment
@@ -1131,7 +1169,6 @@
           }
         }
 
-        // Ako postoje i obični instrumenti (koji nisu setovi), zapisujemo ih u izdavanje_evidencija
         if (regularInstruments.length > 0) {
           await addDoc(collection(db, "izdavanje_evidencija"), {
             vrsta: "IZDAVANJE",
@@ -1145,7 +1182,6 @@
           });
         }
       } else {
-        // Normalni PRIJEM
         await addDoc(collection(db, "prijem_evidencija"), {
           vrsta: "PRIJEM",
           datumEvidencije: selectedDate,
@@ -1325,30 +1361,73 @@
     document.getElementById('edit-date').value = logData.datumEvidencije || new Date().toISOString().split('T')[0];
     editingItems = logData.stavke ? JSON.parse(JSON.stringify(logData.stavke)) : [];
 
+    populateEditDropdownItems();
     renderEditModalItems();
     document.getElementById('edit-modal').classList.remove('hidden');
+  }
+
+  function populateEditDropdownItems() {
+    const typeSelect = document.getElementById('edit-select-type');
+    const itemSelect = document.getElementById('edit-select-item');
+    if (!typeSelect || !itemSelect) return;
+
+    itemSelect.innerHTML = "";
+    const selectedType = typeSelect.value;
+
+    if (selectedType === "instrument") {
+      instrumentsStructure.forEach(inst => {
+        if (!inst.isCustom) {
+          if (inst.hasSub) {
+            inst.subs.forEach(sub => {
+              const opt = document.createElement('option');
+              opt.value = sub;
+              opt.textContent = sub;
+              itemSelect.appendChild(opt);
+            });
+          } else {
+            const opt = document.createElement('option');
+            opt.value = inst.name;
+            opt.textContent = inst.name;
+            itemSelect.appendChild(opt);
+          }
+        }
+      });
+    } else {
+      availableSetsList.forEach(setName => {
+        const opt = document.createElement('option');
+        opt.value = setName;
+        opt.textContent = setName;
+        itemSelect.appendChild(opt);
+      });
+    }
   }
 
   function renderEditModalItems() {
     const container = document.getElementById('edit-items-container');
     container.innerHTML = "";
 
+    if (editingItems.length === 0) {
+      container.innerHTML = `<p class="text-gray-400 italic text-xs text-center">Nema stavki u zapisu.</p>`;
+      return;
+    }
+
     editingItems.forEach((item, index) => {
       const row = document.createElement('div');
-      row.className = "flex gap-2 items-center bg-gray-50 p-2 border rounded-lg";
+      row.className = "flex gap-2 items-center bg-gray-50 p-2 border rounded-lg text-xs";
+      
+      const isSetBadge = item.isSet 
+        ? `<span class="bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded text-[10px]">SET (${item.status || 'beznaziva'})</span>` 
+        : `<span class="bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded text-[10px]">INST</span>`;
+
       row.innerHTML = `
-        <input type="text" value="${item.naziv}" class="edit-item-name flex-grow p-1.5 border rounded text-xs" data-idx="${index}">
-        <input type="number" min="1" value="${item.kolicina}" class="edit-item-qty w-16 p-1.5 border rounded text-xs text-center" data-idx="${index}">
-        <button type="button" class="btn-remove-edit-item text-red-500 font-bold text-sm px-1" data-idx="${index}">✕</button>
+        <div class="flex-grow flex items-center gap-1 overflow-hidden">
+          ${isSetBadge}
+          <span class="font-semibold truncate">${item.naziv}</span>
+        </div>
+        <input type="number" min="1" value="${item.kolicina}" class="edit-item-qty w-14 p-1 border rounded text-xs text-center bg-white" data-idx="${index}">
+        <button type="button" class="btn-remove-edit-item text-red-500 font-bold text-sm px-1 hover:text-red-700" data-idx="${index}">✕</button>
       `;
       container.appendChild(row);
-    });
-
-    container.querySelectorAll('.edit-item-name').forEach(inp => {
-      inp.addEventListener('input', (e) => {
-        const idx = parseInt(e.target.getAttribute('data-idx'), 10);
-        editingItems[idx].naziv = e.target.value;
-      });
     });
 
     container.querySelectorAll('.edit-item-qty').forEach(inp => {
