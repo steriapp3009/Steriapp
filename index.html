@@ -65,9 +65,9 @@
     <!-- EKRAN 3: GLAVNA APLIKACIJA -->
     <div id="app-container" class="hidden space-y-6">
 
-      <!-- IZBOR: PRIJEM ILI IZDAVANJE -->
+      <!-- IZBOR: PRIJEM, IZDAVANJE ILI PREGLED -->
       <div id="step-main-choice" class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center space-y-4">
-        <h2 class="text-xl font-bold text-gray-800">Odaberite evidenciju</h2>
+        <h2 class="text-xl font-bold text-gray-800">Odaberite opciju</h2>
         <div class="grid grid-cols-2 gap-4">
           <button id="btn-prijem" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg text-lg transition flex flex-col items-center justify-center gap-1">
             <span class="text-2xl">📥</span> PRIJEM
@@ -76,38 +76,40 @@
             <span class="text-2xl">📤</span> IZDAVANJE
           </button>
         </div>
-      </div>
+        
+        <button id="btn-pregled-toggle" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-300 font-bold py-3 rounded-xl shadow-sm transition flex items-center justify-center gap-2">
+          <span>📋</span> PREGLED EVIDENCIJE
+        </button>
 
-      <!-- KORAK 2: ODABIR KATEGORIJE ODJELA (4 gumba u bojama) -->
-      <div id="step-category" class="hidden bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
-        <div class="flex justify-between items-center border-b pb-2">
-          <h3 class="text-lg font-bold text-gray-800">Odabir kategorije - <span id="cat-type-label"></span></h3>
-          <button id="btn-back-to-main" class="text-sm text-blue-600 font-semibold hover:underline">Natrag</button>
-        </div>
-        <div class="grid grid-cols-1 gap-3">
-          <button data-cat="Kirurgija" class="cat-btn w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-xl shadow transition text-left flex justify-between items-center">
-            <span>Kirurgija</span> <span class="text-xl">🏥</span>
-          </button>
-          <button data-cat="Ginekologija" class="cat-btn w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 px-4 rounded-xl shadow transition text-left flex justify-between items-center">
-            <span>Ginekologija</span> <span class="text-xl">👶</span>
-          </button>
-          <button data-cat="Interna" class="cat-btn w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 px-4 rounded-xl shadow transition text-left flex justify-between items-center">
-            <span>Interna</span> <span class="text-xl">🩺</span>
-          </button>
-          <button data-cat="Vanjski odjeli" class="cat-btn w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3.5 px-4 rounded-xl shadow transition text-left flex justify-between items-center">
-            <span>Vanjski odjeli</span> <span class="text-xl">🏢</span>
-          </button>
+        <!-- POD-IZBOR ZA PREGLED -->
+        <div id="pregled-choice-container" class="hidden pt-2 border-t space-y-2">
+          <p class="text-xs font-semibold text-gray-500 uppercase">Odaberite evidenciju za pregled:</p>
+          <div class="grid grid-cols-2 gap-3">
+            <button id="btn-view-prijem" class="bg-green-100 hover:bg-green-200 text-green-800 font-bold py-2.5 rounded-lg border border-green-300 text-sm">
+              📥 Prijem
+            </button>
+            <button id="btn-view-izdavanje" class="bg-red-100 hover:bg-red-200 text-red-800 font-bold py-2.5 rounded-lg border border-red-300 text-sm">
+              📤 Izdavanje
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- FORMULAR UNOSA -->
       <div id="step-form" class="hidden bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
         <div class="flex justify-between items-center border-b pb-2">
-          <div>
-            <h3 class="text-lg font-bold text-gray-800">Unos: <span id="form-type-label"></span></h3>
-            <p class="text-xs text-blue-600 font-semibold" id="form-category-display"></p>
-          </div>
-          <button id="btn-back-to-cat" class="text-sm text-blue-600 font-semibold hover:underline">Promijeni odjel</button>
+          <h3 class="text-lg font-bold text-gray-800">Unos - <span id="form-type-label"></span></h3>
+          <span id="badge-evidencija-type" class="px-3 py-1 rounded-full text-xs font-bold text-white"></span>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Kategorija odjela</label>
+          <select id="form-category" class="w-full mt-1 p-2.5 border rounded-lg bg-gray-50 font-medium">
+            <option value="Kirurgija">Kirurgija</option>
+            <option value="Ginekologija">Ginekologija</option>
+            <option value="Interna">Interna</option>
+            <option value="Vanjski odjeli">Vanjski odjeli</option>
+          </select>
         </div>
 
         <div>
@@ -131,6 +133,7 @@
             <option value="Crijeva">Crijeva (Respirator, Julijan)</option>
             <option value="Ostali instrumenti">Ostali instrumenti (Bubrežasta, Hvatalica, Prst kuka...)</option>
             <option value="Setovi (Narudžba)">Setovi / Narudžba (MSBI, SBI, UK, HK)</option>
+            <option value="Drugo">✏️ Drugo (Ručni unos instrumenta)</option>
           </select>
         </div>
 
@@ -139,24 +142,15 @@
           <select id="form-instrument-sub" class="w-full mt-1 p-2.5 border rounded-lg bg-gray-50 font-medium"></select>
         </div>
 
-        <!-- NUMERIČKA TIPKOVNICA ZA KOLIČINU -->
+        <!-- POLJE ZA RUČNI UNOS -->
+        <div id="custom-input-container" class="hidden">
+          <label class="block text-sm font-medium text-gray-700">Upišite naziv (instrumenta ili seta)</label>
+          <input type="text" id="form-custom-name" placeholder="Npr. Specijalna hvatalica ili Set XY..." class="w-full mt-1 p-2.5 border border-purple-300 rounded-lg bg-purple-50 font-medium focus:ring-2 focus:ring-purple-500 focus:outline-none">
+        </div>
+
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Količina (kom/set)</label>
-          <input type="text" id="form-qty" readonly value="1" class="w-full p-2.5 border rounded-lg font-bold text-xl text-center bg-gray-50 mb-2">
-          <div class="grid grid-cols-3 gap-2">
-            <button type="button" class="num-btn bg-gray-200 hover:bg-gray-300 font-bold py-2.5 rounded-lg text-lg">1</button>
-            <button type="button" class="num-btn bg-gray-200 hover:bg-gray-300 font-bold py-2.5 rounded-lg text-lg">2</button>
-            <button type="button" class="num-btn bg-gray-200 hover:bg-gray-300 font-bold py-2.5 rounded-lg text-lg">3</button>
-            <button type="button" class="num-btn bg-gray-200 hover:bg-gray-300 font-bold py-2.5 rounded-lg text-lg">4</button>
-            <button type="button" class="num-btn bg-gray-200 hover:bg-gray-300 font-bold py-2.5 rounded-lg text-lg">5</button>
-            <button type="button" class="num-btn bg-gray-200 hover:bg-gray-300 font-bold py-2.5 rounded-lg text-lg">6</button>
-            <button type="button" class="num-btn bg-gray-200 hover:bg-gray-300 font-bold py-2.5 rounded-lg text-lg">7</button>
-            <button type="button" class="num-btn bg-gray-200 hover:bg-gray-300 font-bold py-2.5 rounded-lg text-lg">8</button>
-            <button type="button" class="num-btn bg-gray-200 hover:bg-gray-300 font-bold py-2.5 rounded-lg text-lg">9</button>
-            <button type="button" id="num-clear" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold py-2.5 rounded-lg text-sm">C</button>
-            <button type="button" class="num-btn bg-gray-200 hover:bg-gray-300 font-bold py-2.5 rounded-lg text-lg">0</button>
-            <button type="button" id="num-back" class="bg-gray-300 hover:bg-gray-400 font-bold py-2.5 rounded-lg text-sm">⌫</button>
-          </div>
+          <label class="block text-sm font-medium text-gray-700">Količina (kom/set)</label>
+          <input type="number" id="form-qty" value="1" min="1" class="w-full mt-1 p-2.5 border rounded-lg font-bold text-lg text-center">
         </div>
 
         <div class="pt-4 border-t flex space-x-2">
@@ -166,6 +160,20 @@
           <button id="btn-cancel-form" class="w-1/2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-lg">
             Odustani
           </button>
+        </div>
+      </div>
+
+      <!-- EKRAN PREGLEDA EVIDENCIJE -->
+      <div id="step-logs" class="hidden bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h3 class="text-lg font-bold text-gray-800">Evidencija - <span id="logs-title-type"></span></h3>
+          <button id="btn-close-logs" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs px-3 py-1.5 rounded font-semibold">
+            ← Nazad
+          </button>
+        </div>
+
+        <div id="logs-container" class="space-y-2 max-h-96 overflow-y-auto pr-1">
+          <p class="text-gray-500 text-sm text-center py-4">Učitavanje podataka...</p>
         </div>
       </div>
 
@@ -180,7 +188,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyD8M5d_HsX_37ZO2OGnvZvBK-TdzKzPFdk",
@@ -197,7 +205,6 @@
 
     let currentUser = null;
     let currentType = "PRIJEM";
-    let currentCategory = "Kirurgija";
 
     const departmentsData = {
       "Kirurgija": ["Abdomen (ABD)", "Dječja kirurgija", "Dječja ambulanta", "JIL", "Opća ambulanta", "ORL ambulanta", "ORL odjel", "Ortopedska ambulanta", "Traumatološki odjel", "Traumatološka ambulanta", "Urološka ambulanta", "Urološki odjel", "Vaskularna"],
@@ -215,37 +222,38 @@
       "Maske i Dišni sustav": ["Maska O2", "Lar maska", "Airway", "Nazofar tubus"],
       "Crijeva": ["Crijeva za respirator", "Julijan crijeva"],
       "Ostali instrumenti": ["Bubrežasta", "Hvatalica", "Prst kuka", "Špatula", "Drška skalpel", "Sauger", "Dijelovi vac pumpe", "Vodilica"],
-      "Setovi (Narudžba)": ["Set MSBI", "Set SBI", "Set UK", "Set HK"]
+      "Setovi (Narudžba)": ["Set MSBI", "Set SBI", "Set UK", "Set HK", "Drugo (ručni unos seta)"]
     };
 
-    document.getElementById('btn-prijem').onclick = () => selectMainType("PRIJEM");
-    document.getElementById('btn-izdavanje').onclick = () => selectMainType("IZDAVANJE");
-    document.getElementById('btn-back-to-main').onclick = resetToMain;
-    document.getElementById('btn-back-to-cat').onclick = resetToCategory;
-    document.getElementById('btn-cancel-form').onclick = resetToMain;
+    document.getElementById('btn-prijem').onclick = () => openForm("PRIJEM");
+    document.getElementById('btn-izdavanje').onclick = () => openForm("IZDAVANJE");
+    document.getElementById('btn-cancel-form').onclick = resetMain;
+    document.getElementById('btn-close-logs').onclick = resetMain;
 
-    function selectMainType(type) {
+    // Otvaranje opcija za pregled
+    document.getElementById('btn-pregled-toggle').onclick = () => {
+      document.getElementById('pregled-choice-container').classList.toggle('hidden');
+    };
+
+    document.getElementById('btn-view-prijem').onclick = () => loadLogs("PRIJEM");
+    document.getElementById('btn-view-izdavanje').onclick = () => loadLogs("IZDAVANJE");
+
+    document.getElementById('form-category').onchange = (e) => updateDepartments(e.target.value);
+    document.getElementById('form-instrument-group').onchange = (e) => updateSubgroups(e.target.value);
+    document.getElementById('form-instrument-sub').onchange = (e) => checkCustomSubgroup(e.target.value);
+
+    function openForm(type) {
       currentType = type;
       document.getElementById('step-main-choice').classList.add('hidden');
-      document.getElementById('step-category').classList.remove('hidden');
-      document.getElementById('cat-type-label').textContent = type;
-    }
-
-    document.querySelectorAll('.cat-btn').forEach(btn => {
-      btn.onclick = (e) => {
-        currentCategory = e.currentTarget.getAttribute('data-cat');
-        openForm();
-      };
-    });
-
-    function openForm() {
-      document.getElementById('step-category').classList.add('hidden');
+      document.getElementById('step-logs').classList.add('hidden');
       document.getElementById('step-form').classList.remove('hidden');
-      document.getElementById('form-type-label').textContent = currentType;
-      document.getElementById('form-category-display').textContent = "Kategorija: " + currentCategory;
+      document.getElementById('form-type-label').textContent = type;
       
-      document.getElementById('form-qty').value = "1";
-      updateDepartments(currentCategory);
+      const badge = document.getElementById('badge-evidencija-type');
+      badge.textContent = type;
+      badge.className = type === "PRIJEM" ? "px-3 py-1 rounded-full text-xs font-bold bg-green-600 text-white" : "px-3 py-1 rounded-full text-xs font-bold bg-red-600 text-white";
+
+      updateDepartments("Kirurgija");
       updateSubgroups("Pincete");
     }
 
@@ -260,12 +268,20 @@
       });
     }
 
-    document.getElementById('form-instrument-group').onchange = (e) => updateSubgroups(e.target.value);
-
     function updateSubgroups(group) {
       const subContainer = document.getElementById('subgroup-container');
+      const customContainer = document.getElementById('custom-input-container');
       const subSelect = document.getElementById('form-instrument-sub');
-      
+
+      if (group === "Drugo") {
+        subContainer.classList.add('hidden');
+        customContainer.classList.remove('hidden');
+        document.getElementById('form-custom-name').value = "";
+        return;
+      }
+
+      customContainer.classList.add('hidden');
+
       if (subgroupsData[group]) {
         subContainer.classList.remove('hidden');
         subSelect.innerHTML = "";
@@ -275,43 +291,47 @@
           opt.textContent = s;
           subSelect.appendChild(opt);
         });
+        checkCustomSubgroup(subSelect.value);
       } else {
         subContainer.classList.add('hidden');
       }
     }
 
-    // Logika numeričke tipkovnice
-    const qtyInput = document.getElementById('form-qty');
-    document.querySelectorAll('.num-btn').forEach(b => {
-      b.onclick = (e) => {
-        const val = e.target.textContent;
-        if (qtyInput.value === "0" || qtyInput.value === "1") {
-          qtyInput.value = val;
-        } else {
-          qtyInput.value += val;
-        }
-      };
-    });
-
-    document.getElementById('num-clear').onclick = () => { qtyInput.value = "0"; };
-    document.getElementById('num-back').onclick = () => {
-      if (qtyInput.value.length > 1) {
-        qtyInput.value = qtyInput.value.slice(0, -1);
+    function checkCustomSubgroup(val) {
+      const customContainer = document.getElementById('custom-input-container');
+      if (val === "Drugo (ručni unos seta)") {
+        customContainer.classList.remove('hidden');
+        document.getElementById('form-custom-name').value = "";
       } else {
-        qtyInput.value = "0";
+        customContainer.classList.add('hidden');
       }
-    };
+    }
 
     document.getElementById('btn-save-form').onclick = async () => {
       const group = document.getElementById('form-instrument-group').value;
       const subContainer = document.getElementById('subgroup-container');
-      const itemDetail = subContainer.classList.contains('hidden') ? group : document.getElementById('form-instrument-sub').value;
-      const qty = parseInt(qtyInput.value) || 1;
+      const customContainer = document.getElementById('custom-input-container');
+      
+      let itemDetail = "";
+
+      if (!customContainer.classList.contains('hidden')) {
+        itemDetail = document.getElementById('form-custom-name').value.trim();
+        if (!itemDetail) {
+          alert("Molimo upišite naziv instrumenta ili seta!");
+          return;
+        }
+      } else if (!subContainer.classList.contains('hidden')) {
+        itemDetail = document.getElementById('form-instrument-sub').value;
+      } else {
+        itemDetail = group;
+      }
+
+      const qty = parseInt(document.getElementById('form-qty').value) || 1;
 
       try {
         await addDoc(collection(db, currentType === "PRIJEM" ? "prijem_evidencija" : "izdavanje_evidencija"), {
           vrsta: currentType,
-          kategorija: currentCategory,
+          kategorija: document.getElementById('form-category').value,
           odjel: document.getElementById('form-department').value,
           instrument: itemDetail,
           kolicina: qty,
@@ -319,21 +339,76 @@
           datum: serverTimestamp()
         });
         alert("Spremljeno!");
-        resetToMain();
+        resetMain();
       } catch (e) {
         alert("Greška: " + e.message);
       }
     };
 
-    function resetToMain() {
-      document.getElementById('step-main-choice').classList.remove('hidden');
-      document.getElementById('step-category').classList.add('hidden');
+    // Učitavanje i prikaz evidencije
+    async function loadLogs(type) {
+      document.getElementById('step-main-choice').classList.add('hidden');
       document.getElementById('step-form').classList.add('hidden');
+      document.getElementById('step-logs').classList.remove('hidden');
+      
+      const titleSpan = document.getElementById('logs-title-type');
+      titleSpan.textContent = type;
+      titleSpan.className = type === "PRIJEM" ? "text-green-600" : "text-red-600";
+
+      const container = document.getElementById('logs-container');
+      container.innerHTML = `<p class="text-gray-500 text-sm text-center py-4">Učitavanje ${type}...</p>`;
+
+      try {
+        const colName = type === "PRIJEM" ? "prijem_evidencija" : "izdavanje_evidencija";
+        const q = query(collection(db, colName), orderBy("datum", "desc"));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          container.innerHTML = `<p class="text-gray-500 text-sm text-center py-4">Nema unesenih zapisa za ${type}.</p>`;
+          return;
+        }
+
+        container.innerHTML = "";
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          
+          let dateStr = "Prije nekoliko trenutaka";
+          if (data.datum && data.datum.toDate) {
+            const d = data.datum.toDate();
+            dateStr = d.toLocaleDateString('hr-HR') + ' u ' + d.toLocaleTimeString('hr-HR', { hour: '2-digit', minute: '2-digit' });
+          }
+
+          // Format pojedinačnog zapisa
+          const row = document.createElement('div');
+          row.className = "p-3 border rounded-lg bg-gray-50 text-xs space-y-1 shadow-sm";
+          
+          let detailItem = data.instrument || (data.stavke ? data.stavke.map(s => `${s.naziv} (x${s.kolicina})`).join(', ') : '-');
+          let qtyDisplay = data.kolicina ? `${data.kolicina} kom` : '';
+
+          row.innerHTML = `
+            <div class="flex justify-between font-bold text-gray-700 border-b pb-1">
+              <span>${data.kategorija || ''} - ${data.odjel || ''}</span>
+              <span class="text-gray-400 font-normal text-[10px]">${dateStr}</span>
+            </div>
+            <div class="flex justify-between items-center pt-1">
+              <span class="font-semibold text-gray-800 text-sm">${detailItem}</span>
+              <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold text-xs">${qtyDisplay}</span>
+            </div>
+            <div class="text-[10px] text-gray-400">Operater: ${data.operaterEmail || '-'}</div>
+          `;
+          container.appendChild(row);
+        });
+
+      } catch (err) {
+        container.innerHTML = `<p class="text-red-500 text-sm text-center py-4">Greška kod dohvaćanja: ${err.message}</p>`;
+      }
     }
 
-    function resetToCategory() {
+    function resetMain() {
+      document.getElementById('step-main-choice').classList.remove('hidden');
       document.getElementById('step-form').classList.add('hidden');
-      document.getElementById('step-category').classList.remove('hidden');
+      document.getElementById('step-logs').classList.add('hidden');
+      document.getElementById('pregled-choice-container').classList.add('hidden');
     }
 
     onAuthStateChanged(auth, (user) => {
