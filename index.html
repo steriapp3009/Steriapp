@@ -3,12 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Steri-app | Evidencija sterilizacije</title>
-  
-  <!-- Tailwind CSS CDN -->
+  <title>Steri-app | Evidencija Prijema i Izdavanja</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Manifest za PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#2563eb">
 </head>
@@ -16,45 +12,40 @@
 
   <!-- ZAGLAVLJE -->
   <header class="bg-blue-600 text-white shadow-md p-4 flex justify-between items-center">
-    <div class="flex items-center space-x-2">
-      <h1 class="text-xl font-bold tracking-wide">Steri-app</h1>
-    </div>
+    <h1 class="text-xl font-bold tracking-wide">Steri-app</h1>
     <button id="btn-logout" class="hidden bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-semibold transition">
       Odjava
     </button>
   </header>
 
-  <!-- GLAVNI SADRŽAJ -->
   <main class="flex-grow container mx-auto p-4 max-w-lg flex flex-col justify-center">
 
-    <!-- EKRAN 1: PRIJAVA / REGISTRACIJA -->
-    <div id="auth-container" class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-      <h2 id="auth-title" class="text-2xl font-bold text-center text-blue-600 mb-6">Prijava u sustav</h2>
+    <!-- EKRAN 1: PRIJAVA -->
+    <div id="auth-container" class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
+      <h2 id="auth-title" class="text-2xl font-bold text-center text-blue-600">Prijava u sustav</h2>
       
-      <div id="auth-form" class="space-y-4">
-        <div id="reg-fields" class="hidden space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Ime i prezime</label>
-            <input type="text" id="auth-name" placeholder="npr. Ana Anić" class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-          </div>
-        </div>
-
+      <div id="reg-fields" class="hidden space-y-3">
         <div>
-          <label class="block text-sm font-medium text-gray-700">E-mail adresa</label>
-          <input type="email" id="auth-email" placeholder="vas.email@primjer.com" class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <label class="block text-sm font-medium text-gray-700">Ime i prezime</label>
+          <input type="text" id="auth-name" placeholder="npr. Ana Anić" class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
         </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Lozinka</label>
-          <input type="password" id="auth-password" placeholder="••••••••" class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-        </div>
-
-        <button id="btn-auth-action" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow transition">
-          Prijavi se
-        </button>
       </div>
 
-      <div class="mt-6 text-center text-sm text-gray-600">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">E-mail adresa</label>
+        <input type="email" id="auth-email" placeholder="vas.email@primjer.com" class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Lozinka</label>
+        <input type="password" id="auth-password" placeholder="••••••••" class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+      </div>
+
+      <button id="btn-auth-action" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow transition">
+        Prijavi se
+      </button>
+
+      <div class="text-center text-sm text-gray-600 pt-2">
         <span id="auth-toggle-text">Nemate račun?</span>
         <button id="auth-toggle-link" class="text-blue-600 font-bold ml-1 hover:underline focus:outline-none">
           Registrirajte se
@@ -65,152 +56,140 @@
     <!-- EKRAN 2: ČEKANJE ODOBRENJA -->
     <div id="pending-container" class="hidden bg-white p-6 rounded-xl shadow-lg border border-yellow-200 text-center space-y-4">
       <div class="text-yellow-500 mx-auto w-16 h-16 flex items-center justify-center bg-yellow-100 rounded-full">
-        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       </div>
-      <h2 class="text-xl font-bold text-gray-800">Vaš račun čeka odobrenje</h2>
-      <p class="text-gray-600 text-sm">Uspješno ste poslali zahtjev. Administrator mora odobriti Vaš račun prije nego što možete pristupiti evidenciji.</p>
+      <h2 class="text-xl font-bold text-gray-800">Račun čeka odobrenje</h2>
+      <p class="text-gray-600 text-sm">Zahtjev je poslan. Administrator mora odobriti Vaš račun.</p>
     </div>
 
     <!-- EKRAN 3: GLAVNA APLIKACIJA -->
     <div id="app-container" class="hidden space-y-6">
-      
+
       <!-- ADMIN PANEL -->
       <div id="admin-panel" class="hidden bg-purple-50 p-4 rounded-xl border border-purple-200 space-y-3">
-        <h3 class="font-bold text-purple-900 text-lg flex items-center gap-2">
-          <span>⚙️</span> Admin Panel - Korisnici na čekanju
-        </h3>
+        <h3 class="font-bold text-purple-900 text-lg">⚙️ Admin Panel - Zahtjevi</h3>
         <div id="pending-users-list" class="space-y-2 text-sm text-gray-700">
           <p class="text-gray-500 italic">Nema novih zahtjeva.</p>
         </div>
       </div>
 
-      <!-- GLAVNE RADNJE: PRIJEM / IZDAVANJE / STERILIZACIJA -->
-      <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center space-y-4">
-        <h2 class="text-xl font-bold text-gray-800">Evidencija instrumenata</h2>
-        <p class="text-gray-600 text-sm">Odaberite opciju za unos:</p>
-        
-        <div class="grid grid-cols-2 gap-3">
-          <button id="btn-open-prijem" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow transition text-base flex items-center justify-center gap-1.5">
-            <span>📥</span> Prijem
+      <!-- IZBOR: PRIJEM ILI IZDAVANJE -->
+      <div id="step-main-choice" class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center space-y-4">
+        <h2 class="text-xl font-bold text-gray-800">Odaberite evidenciju</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <button id="btn-prijem" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg text-lg transition flex flex-col items-center justify-center gap-1">
+            <span class="text-2xl">📥</span> PRIJEM
           </button>
-          <button id="btn-open-izdavanje" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow transition text-base flex items-center justify-center gap-1.5">
-            <span>📤</span> Izdavanje
+          <button id="btn-izdavanje" class="bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl shadow-lg text-lg transition flex flex-col items-center justify-center gap-1">
+            <span class="text-2xl">📤</span> IZDAVANJE
           </button>
         </div>
+      </div>
 
-        <button id="btn-open-sterilizacija" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg shadow transition text-sm flex items-center justify-center gap-2">
-          <span>🧪</span> Ciklus sterilizacije (Autoklav)
+      <!-- KORAK 1: KATEGORIJE ODJELA -->
+      <div id="step-categories" class="hidden bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h3 class="text-lg font-bold text-gray-800"> Odaberite kategoriju</h3>
+          <span id="badge-evidencija-type" class="px-3 py-1 rounded-full text-xs font-bold text-white"></span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <button class="btn-cat bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 text-blue-900 font-bold p-3 rounded-xl shadow-sm text-center" data-cat="Kirurgija">Kirurgija</button>
+          <button class="btn-cat bg-pink-50 hover:bg-pink-100 border-2 border-pink-200 text-pink-900 font-bold p-3 rounded-xl shadow-sm text-center" data-cat="Ginekologija">Ginekologija</button>
+          <button class="btn-cat bg-amber-50 hover:bg-amber-100 border-2 border-amber-200 text-amber-900 font-bold p-3 rounded-xl shadow-sm text-center" data-cat="Interna">Interna</button>
+          <button class="btn-cat bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 text-slate-900 font-bold p-3 rounded-xl shadow-sm text-center" data-cat="Vanjski odjeli">Vanjski odjeli</button>
+        </div>
+        <button class="btn-back-main w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 rounded-lg text-sm">
+          ← Nazad
         </button>
       </div>
 
-      <!-- FORMULAR 1: PRIJEM / IZDAVANJE INSTRUMENATA -->
-      <div id="item-form-container" class="hidden bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
-        <div class="flex justify-between items-center border-b pb-2">
-          <h3 id="item-form-title" class="text-lg font-bold text-gray-800">Unos</h3>
-          <span id="item-form-type-badge" class="px-3 py-1 rounded-full text-xs font-bold text-white"></span>
+      <!-- KORAK 2: POPIS ODJELA -->
+      <div id="step-departments" class="hidden bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
+        <h3 id="departments-title" class="text-lg font-bold text-gray-800 border-b pb-2">Odaberite odjel</h3>
+        <div id="departments-list" class="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto p-1"></div>
+        <button id="btn-back-cats" class="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 rounded-lg text-sm">
+          ← Natrag na kategorije
+        </button>
+      </div>
+
+      <!-- KORAK 3: UNOS INSTRUMENATA / SETOVA -->
+      <div id="step-instruments" class="hidden bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
+        <div class="border-b pb-2">
+          <span id="selected-dept-label" class="text-xs font-bold text-blue-600 block"></span>
+          <h3 class="text-lg font-bold text-gray-800">Odaberite instrumente / narudžbu</h3>
         </div>
 
-        <!-- KATEGORIJA ODJELA -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Kategorija odjela</label>
-          <select id="department-category" class="w-full mt-1 p-2.5 border rounded-lg">
-            <option value="Kirurgija">Kirurgija</option>
-            <option value="Interna">Interna</option>
-            <option value="Ginekologija">Ginekologija</option>
-            <option value="Vanjski Korisnici">Vanjski Korisnici</option>
-          </select>
+        <!-- LISTA KOŠARICE (ODABRANE STAVKE) -->
+        <div id="cart-summary" class="bg-gray-50 p-3 rounded-lg border text-sm space-y-1">
+          <p class="text-gray-500 italic text-xs">Još niste dodali niti jedan instrument.</p>
         </div>
 
-        <!-- SPECIFIČNI ODJEL / AMBULANTA -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Odjel / Ambulanta</label>
-          <input type="text" id="department-name" placeholder="npr. Kirurška sala 1, ORL ordinacija..." class="w-full mt-1 p-2.5 border rounded-lg">
+        <!-- LISTA GRUPA INSTRUMENATA -->
+        <div class="space-y-2">
+          <label class="block text-xs font-bold text-gray-500 uppercase">Popis instrumenata:</label>
+          <div id="instruments-menu" class="space-y-2 max-h-64 overflow-y-auto p-1 border rounded-lg bg-gray-50"></div>
         </div>
 
-        <!-- INSTRUMENTI / SETOVI -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Naziv instrumenta ili seta</label>
-          <input type="text" id="instrument-name" placeholder="npr. Set za previjanje, Pean, Makaze..." class="w-full mt-1 p-2.5 border rounded-lg">
+        <!-- SUBMENU ZA PODGRUPE (MODAL / SKRIVEN) -->
+        <div id="subgroup-modal" class="hidden bg-blue-50 p-4 rounded-xl border border-blue-200 space-y-2">
+          <h4 id="subgroup-title" class="font-bold text-blue-900 text-sm">Odaberite podvrstu:</h4>
+          <div id="subgroup-list" class="grid grid-cols-1 gap-2"></div>
         </div>
 
-        <!-- KOLEČINA -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Količina (kom/set)</label>
-          <input type="number" id="instrument-qty" value="1" min="1" class="w-full mt-1 p-2.5 border rounded-lg">
+        <!-- BROJČANA TIPKOVNICA / UNOS KOLIČINE -->
+        <div id="qty-modal" class="hidden bg-slate-800 text-white p-4 rounded-xl space-y-3">
+          <div class="flex justify-between items-center">
+            <span id="qty-item-name" class="font-bold text-sm text-blue-300"></span>
+            <span class="text-xs text-gray-400">Unesite količinu</span>
+          </div>
+          <input type="number" id="qty-input" value="1" min="1" class="w-full text-center text-3xl font-bold bg-slate-700 border border-slate-600 text-white rounded-lg p-2 focus:outline-none">
+          <div class="grid grid-cols-3 gap-2">
+            <button class="btn-num bg-slate-700 hover:bg-slate-600 text-xl font-bold py-3 rounded-lg" data-num="1">1</button>
+            <button class="btn-num bg-slate-700 hover:bg-slate-600 text-xl font-bold py-3 rounded-lg" data-num="2">2</button>
+            <button class="btn-num bg-slate-700 hover:bg-slate-600 text-xl font-bold py-3 rounded-lg" data-num="3">3</button>
+            <button class="btn-num bg-slate-700 hover:bg-slate-600 text-xl font-bold py-3 rounded-lg" data-num="4">4</button>
+            <button class="btn-num bg-slate-700 hover:bg-slate-600 text-xl font-bold py-3 rounded-lg" data-num="5">5</button>
+            <button class="btn-num bg-slate-700 hover:bg-slate-600 text-xl font-bold py-3 rounded-lg" data-num="6">6</button>
+            <button class="btn-num bg-slate-700 hover:bg-slate-600 text-xl font-bold py-3 rounded-lg" data-num="7">7</button>
+            <button class="btn-num bg-slate-700 hover:bg-slate-600 text-xl font-bold py-3 rounded-lg" data-num="8">8</button>
+            <button class="btn-num bg-slate-700 hover:bg-slate-600 text-xl font-bold py-3 rounded-lg" data-num="9">9</button>
+            <button id="btn-num-clear" class="bg-red-800 hover:bg-red-700 text-sm font-bold py-3 rounded-lg">C</button>
+            <button class="btn-num bg-slate-700 hover:bg-slate-600 text-xl font-bold py-3 rounded-lg" data-num="0">0</button>
+            <button id="btn-num-confirm" class="bg-green-600 hover:bg-green-700 text-sm font-bold py-3 rounded-lg">DODAJ</button>
+          </div>
         </div>
 
-        <!-- NAPOMENA -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Napomena</label>
-          <textarea id="item-note" placeholder="Dodatne napomene o stanju instrumenata..." class="w-full mt-1 p-2.5 border rounded-lg"></textarea>
+        <!-- GUMB ZANARUDŽBU (SETVE) -->
+        <button id="btn-open-order" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-lg shadow flex items-center justify-center gap-2">
+          <span>📦</span> Dodaj Narudžbu (Setove)
+        </button>
+
+        <!-- ODABIR SETOVA ZA NARUDŽBU -->
+        <div id="order-sets-modal" class="hidden bg-amber-50 p-4 rounded-xl border border-amber-200 space-y-3">
+          <h4 class="font-bold text-amber-900 text-sm">Odaberite vrstu seta:</h4>
+          <div class="grid grid-cols-2 gap-2">
+            <button class="btn-set-choice bg-white hover:bg-amber-100 border border-amber-300 font-bold p-2.5 rounded-lg text-amber-900" data-set="MSBI">MSBI</button>
+            <button class="btn-set-choice bg-white hover:bg-amber-100 border border-amber-300 font-bold p-2.5 rounded-lg text-amber-900" data-set="SBI">SBI</button>
+            <button class="btn-set-choice bg-white hover:bg-amber-100 border border-amber-300 font-bold p-2.5 rounded-lg text-amber-900" data-set="UK">UK</button>
+            <button class="btn-set-choice bg-white hover:bg-amber-100 border border-amber-300 font-bold p-2.5 rounded-lg text-amber-900" data-set="HK">HK</button>
+          </div>
         </div>
 
-        <div class="flex space-x-2 pt-2">
-          <button id="btn-save-item-entry" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg">
-            Spremi
+        <div class="pt-4 border-t flex space-x-2">
+          <button id="btn-save-final" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow">
+            SPREMI EVIDENCIJU
           </button>
-          <button id="btn-cancel-item-entry" class="w-1/2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2.5 rounded-lg">
+          <button id="btn-cancel-entry" class="w-1/2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-lg">
             Odustani
           </button>
         </div>
       </div>
 
-      <!-- FORMULAR 2: ZASEBNA OPTIONA - CIKLUS STERILIZACIJE -->
-      <div id="sterilization-form-container" class="hidden bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
-        <div class="flex justify-between items-center border-b pb-2">
-          <h3 class="text-lg font-bold text-gray-800">Unos Ciklusa Sterilizacije</h3>
-          <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-600 text-white">AUTOKLAV</span>
-        </div>
-        
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Uređaj / Sterilizator</label>
-          <input type="text" id="sterilizer-id" placeholder="npr. Autoklav 1" class="w-full mt-1 p-2.5 border rounded-lg">
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Broj ciklusa / Šarža</label>
-          <input type="number" id="cycle-number" placeholder="npr. 12" class="w-full mt-1 p-2.5 border rounded-lg">
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Program / Temperatura</label>
-          <select id="program-type" class="w-full mt-1 p-2.5 border rounded-lg">
-            <option value="134°C - 5 min">134°C - 5 min (Brzi ciklus)</option>
-            <option value="134°C - 18 min">134°C - 18 min (Standard)</option>
-            <option value="121°C - 20 min">121°C - 20 min (Osjetljivo)</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Kemijski indikator (Prolaz)</label>
-          <select id="indicator-status" class="w-full mt-1 p-2.5 border rounded-lg">
-            <option value="USPJEŠNO">USPJEŠNO (Promjena boje)</option>
-            <option value="NEUSPJEŠNO">NEUSPJEŠNO (Pala provjera)</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Napomena</label>
-          <textarea id="steril-note" placeholder="Opis ciklusa..." class="w-full mt-1 p-2.5 border rounded-lg"></textarea>
-        </div>
-
-        <div class="flex space-x-2 pt-2">
-          <button id="btn-save-steril-entry" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg">
-            Spremi ciklus
-          </button>
-          <button id="btn-cancel-steril-entry" class="w-1/2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2.5 rounded-lg">
-            Odustani
-          </button>
-        </div>
-      </div>
-
-      <!-- POVIJEST UNOSA -->
+      <!-- POVIJEST EVIDENCIJE (TABLICA PRIJEMA I IZDAVANJA) -->
       <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
-        <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Evidencija nedavnih unosa</h3>
-        <div id="sterilization-list" class="space-y-3">
-          <p class="text-gray-500 italic text-sm">Nema zabilježenih unosa.</p>
+        <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Zadnje evidencije</h3>
+        <div id="logs-list" class="space-y-3">
+          <p class="text-gray-500 italic text-sm">Nema unosa.</p>
         </div>
       </div>
 
@@ -218,33 +197,17 @@
 
   </main>
 
-  <!-- PODNOŽJE -->
   <footer class="text-center p-4 text-xs text-gray-500 border-t bg-white">
-    Steri-app &copy; 2026. Sva prava pridržana.
+    Steri-app &copy; 2026.
   </footer>
 
-  <!-- FIREBASE LOGIKA -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { 
-      getAuth, 
-      signInWithEmailAndPassword, 
-      createUserWithEmailAndPassword, 
-      onAuthStateChanged, 
-      signOut 
+      getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut 
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { 
-      getFirestore, 
-      doc, 
-      setDoc, 
-      getDoc, 
-      collection, 
-      addDoc,
-      query, 
-      where, 
-      onSnapshot, 
-      updateDoc,
-      serverTimestamp 
+      getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, onSnapshot, updateDoc, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -261,329 +224,322 @@
     const db = getFirestore(app);
 
     let currentUser = null;
-    let isRegisterMode = false;
-    let currentItemType = "PRIJEM";
+    let currentType = "PRIJEM";
+    let selectedCategory = "";
+    let selectedDepartment = "";
+    let cartItems = [];
+    let pendingSelectedItem = "";
 
-    // EVENT LISTENERI
-    document.getElementById('auth-toggle-link').addEventListener('click', toggleAuthMode);
-    document.getElementById('btn-auth-action').addEventListener('click', handleAuthAction);
-    document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
-    
-    document.getElementById('btn-open-prijem').addEventListener('click', () => openItemForm("PRIJEM"));
-    document.getElementById('btn-open-izdavanje').addEventListener('click', () => openItemForm("IZDAVANJE"));
-    document.getElementById('btn-cancel-item-entry').addEventListener('click', closeItemForm);
-    document.getElementById('btn-save-item-entry').addEventListener('click', saveItemEntry);
+    // PODACI O ODJELIMA PO KATEGORIJAMA
+    const departmentsData = {
+      "Kirurgija": ["Abdomen (ABD)", "Dječja kirurgija", "Dječja ambulanta", "JIL", "Opća ambulanta", "ORL ambulanta", "ORL odjel", "Ortopedska ambulanta", "Traumatološki odjel", "Traumatološka ambulanta", "Urološka ambulanta", "Urološki odjel", "Vaskularna"],
+      "Ginekologija": ["Gin. odjel", "Novorođenački", "Rađaona", "Rodilište", "UZV"],
+      "Interna": ["Int 1 (kardio)", "Int 2b (gastro)", "Int 2a (endokrina)", "Int 3 (nefro)", "Int 4 (pojačana skrb)", "Gastroskopija", "Infektologija"],
+      "Vanjski odjeli": ["Citologija", "EMNG", "Hemodijaliza", "KVD", "Laboratorij", "Ljekarna", "Neurologija", "Očna ambulanta", "Očni odjel", "OHBP ORL", "OHBP-HKA", "OHBP-SALA", "Pedijatrija", "Produženo", "Pulmologija", "Pulmološka ambulanta", "RTG"]
+    };
 
-    document.getElementById('btn-open-sterilizacija').addEventListener('click', openSterilForm);
-    document.getElementById('btn-cancel-steril-entry').addEventListener('click', closeSterilForm);
-    document.getElementById('btn-save-steril-entry').addEventListener('click', saveSterilCycleEntry);
+    // STRUKTURA INSTRUMENATA PREMA ZADANOM REDOSLIJEDU
+    const instrumentsStructure = [
+      { name: "Pincete", hasSub: true, subs: ["Anatomska pinceta", "Kirurška pinceta", "Ušna pinceta"] },
+      { name: "Škare", hasSub: true, subs: ["Škare", "Škare za zavoj"] },
+      { name: "Pean", hasSub: false },
+      { name: "Iglodržač", hasSub: false },
+      { name: "Chohlea", hasSub: false },
+      { name: "Stapler", hasSub: false },
+      { name: "Sonde", hasSub: true, subs: ["Glavičasta sonda", "Žlijebasta sonda", "Urološke sonde"] },
+      { name: "Kliješta", hasSub: true, subs: ["Kliješta Luer", "Magillova kliješta"] },
+      { name: "Boce", hasSub: true, subs: ["V. boca + čep", "M. boca + čep", "Boce sauger", "Boce O2"] },
+      { name: "Maske i Dišni sustav", hasSub: true, subs: ["Maska O2", "Lar maska", "Airway", "Nazofar tubus"] },
+      { name: "Crijeva", hasSub: true, subs: ["Crijeva za respirator", "Julijan crijeva"] },
+      { name: "Ostali instrumenti", hasSub: true, subs: ["Bubrežasta", "Hvatalica", "Prst kuka", "Špatula", "Drška skalpel", "Sauger", "Dijelovi vac pumpe", "Vodilica"] }
+    ];
 
-    function toggleAuthMode() {
-      isRegisterMode = !isRegisterMode;
-      const title = document.getElementById('auth-title');
-      const btn = document.getElementById('btn-auth-action');
-      const regFields = document.getElementById('reg-fields');
-      const toggleText = document.getElementById('auth-toggle-text');
-      const toggleLink = document.getElementById('auth-toggle-link');
+    // INICIJALIZACIJA DOGAĐAJA
+    document.getElementById('btn-prijem').addEventListener('click', () => startFlow("PRIJEM"));
+    document.getElementById('btn-izdavanje').addEventListener('click', () => startFlow("IZDAVANJE"));
+    document.querySelector('.btn-back-main').addEventListener('click', resetToMain);
+    document.getElementById('btn-back-cats').addEventListener('click', showCategories);
+    document.getElementById('btn-cancel-entry').addEventListener('click', resetToMain);
 
-      if (isRegisterMode) {
-        title.textContent = 'Registracija računa';
-        btn.textContent = 'Pošalji zahtjev za registraciju';
-        regFields.classList.remove('hidden');
-        toggleText.textContent = 'Već imate račun?';
-        toggleLink.textContent = 'Prijavite se';
-      } else {
-        title.textContent = 'Prijava u sustav';
-        btn.textContent = 'Prijavi se';
-        regFields.classList.add('hidden');
-        toggleText.textContent = 'Nemate račun?';
-        toggleLink.textContent = 'Registrirajte se';
-      }
-    }
+    document.querySelectorAll('.btn-cat').forEach(btn => {
+      btn.addEventListener('click', (e) => selectCategory(e.target.getAttribute('data-cat')));
+    });
 
-    async function handleAuthAction() {
-      const email = document.getElementById('auth-email').value.trim();
-      const password = document.getElementById('auth-password').value;
+    document.getElementById('btn-open-order').addEventListener('click', () => {
+      document.getElementById('order-sets-modal').classList.toggle('hidden');
+    });
 
-      if (!email || !password) {
-        alert("Molimo unesite e-mail i lozinku.");
-        return;
-      }
+    document.querySelectorAll('.btn-set-choice').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const setName = "Set " + e.target.getAttribute('data-set');
+        document.getElementById('order-sets-modal').classList.add('hidden');
+        openQtyModal(setName);
+      });
+    });
 
-      if (isRegisterMode) {
-        const name = document.getElementById('auth-name').value.trim();
-        if (!name) {
-          alert("Molimo unesite Vaše ime i prezime.");
-          return;
-        }
+    document.querySelectorAll('.btn-num').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const num = e.target.getAttribute('data-num');
+        const input = document.getElementById('qty-input');
+        if (input.value === "1" || input.value === "0") input.value = num;
+        else input.value += num;
+      });
+    });
 
-        try {
-          const res = await createUserWithEmailAndPassword(auth, email, password);
-          await setDoc(doc(db, "users", res.user.uid), {
-            uid: res.user.uid,
-            email: email,
-            ime: name,
-            uloga: "korisnik",
-            status: "na_cekanju",
-            datum: serverTimestamp()
-          });
-          alert("Registracija uspješna! Vaš račun sada čeka odobrenje administratora.");
-        } catch (err) {
-          alert("Greška kod registracije: " + err.message);
-        }
-      } else {
-        try {
-          await signInWithEmailAndPassword(auth, email, password);
-        } catch (err) {
-          alert("Greška kod prijave: " + err.message);
-        }
-      }
-    }
+    document.getElementById('btn-num-clear').addEventListener('click', () => {
+      document.getElementById('qty-input').value = "1";
+    });
 
-    function openItemForm(type) {
-      closeSterilForm();
-      currentItemType = type;
-      const formContainer = document.getElementById('item-form-container');
-      const title = document.getElementById('item-form-title');
-      const badge = document.getElementById('item-form-type-badge');
+    document.getElementById('btn-num-confirm').addEventListener('click', () => {
+      const qty = parseInt(document.getElementById('qty-input').value) || 1;
+      cartItems.push({ naziv: pendingSelectedItem, kolicina: qty });
+      updateCartSummary();
+      document.getElementById('qty-modal').classList.add('hidden');
+    });
 
-      title.textContent = `Unos - ${type}`;
+    document.getElementById('btn-save-final').addEventListener('click', saveFinalEntry);
+
+    function startFlow(type) {
+      currentType = type;
+      cartItems = [];
+      const badge = document.getElementById('badge-evidencija-type');
       badge.textContent = type;
+      badge.className = type === "PRIJEM" 
+        ? "px-3 py-1 rounded-full text-xs font-bold bg-green-600 text-white"
+        : "px-3 py-1 rounded-full text-xs font-bold bg-red-600 text-white";
 
-      if (type === "PRIJEM") {
-        badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-green-600 text-white";
-      } else {
-        badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-red-600 text-white";
+      document.getElementById('step-main-choice').classList.add('hidden');
+      showCategories();
+    }
+
+    function showCategories() {
+      document.getElementById('step-categories').classList.remove('hidden');
+      document.getElementById('step-departments').classList.add('hidden');
+      document.getElementById('step-instruments').classList.add('hidden');
+    }
+
+    function selectCategory(cat) {
+      selectedCategory = cat;
+      document.getElementById('step-categories').classList.add('hidden');
+      document.getElementById('step-departments').classList.remove('hidden');
+
+      document.getElementById('departments-title').textContent = `Odjeli - ${cat}`;
+      const listDiv = document.getElementById('departments-list');
+      listDiv.innerHTML = "";
+
+      departmentsData[cat].forEach(dept => {
+        const btn = document.createElement('button');
+        btn.className = "w-full text-left bg-gray-50 hover:bg-blue-50 border p-3 rounded-lg font-medium text-gray-800 text-sm";
+        btn.textContent = dept;
+        btn.onclick = () => selectDepartment(dept);
+        listDiv.appendChild(btn);
+      });
+    }
+
+    function selectDepartment(dept) {
+      selectedDepartment = dept;
+      document.getElementById('step-departments').classList.add('hidden');
+      document.getElementById('step-instruments').classList.remove('hidden');
+      document.getElementById('selected-dept-label').textContent = `${selectedCategory} → ${selectedDepartment}`;
+
+      renderInstrumentsMenu();
+      updateCartSummary();
+    }
+
+    function renderInstrumentsMenu() {
+      const menuDiv = document.getElementById('instruments-menu');
+      menuDiv.innerHTML = "";
+
+      instrumentsStructure.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = "w-full flex justify-between items-center bg-white border p-3 rounded-lg text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-100";
+        btn.innerHTML = `<span>${item.name}</span> <span class="text-xs text-gray-400">${item.hasSub ? '►' : '+'}</span>`;
+
+        btn.onclick = () => {
+          if (item.hasSub) {
+            openSubgroupModal(item);
+          } else {
+            openQtyModal(item.name);
+          }
+        };
+
+        menuDiv.appendChild(btn);
+      });
+    }
+
+    function openSubgroupModal(item) {
+      const modal = document.getElementById('subgroup-modal');
+      const list = document.getElementById('subgroup-list');
+      document.getElementById('subgroup-title').textContent = `Odaberite podvrstu (${item.name}):`;
+      list.innerHTML = "";
+
+      item.subs.forEach(sub => {
+        const btn = document.createElement('button');
+        btn.className = "bg-white hover:bg-blue-100 border p-2.5 rounded-lg text-sm font-semibold text-gray-800 text-left";
+        btn.textContent = sub;
+        btn.onclick = () => {
+          modal.classList.add('hidden');
+          openQtyModal(sub);
+        };
+        list.appendChild(btn);
+      });
+
+      modal.classList.remove('hidden');
+    }
+
+    function openQtyModal(itemName) {
+      pendingSelectedItem = itemName;
+      document.getElementById('subgroup-modal').classList.add('hidden');
+      document.getElementById('qty-item-name').textContent = itemName;
+      document.getElementById('qty-input').value = "1";
+      document.getElementById('qty-modal').classList.remove('hidden');
+    }
+
+    function updateCartSummary() {
+      const summaryDiv = document.getElementById('cart-summary');
+      if (cartItems.length === 0) {
+        summaryDiv.innerHTML = '<p class="text-gray-500 italic text-xs">Još niste dodali niti jedan instrument.</p>';
+        return;
       }
 
-      formContainer.classList.remove('hidden');
-      formContainer.scrollIntoView({ behavior: 'smooth' });
+      summaryDiv.innerHTML = "";
+      cartItems.forEach((ci, idx) => {
+        const row = document.createElement('div');
+        row.className = "flex justify-between items-center text-xs border-b pb-1 last:border-0";
+        row.innerHTML = `
+          <span class="font-bold text-gray-800">${ci.naziv}</span>
+          <div class="flex items-center gap-2">
+            <span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded">${ci.kolicina} kom</span>
+            <button class="text-red-500 font-bold text-sm hover:text-red-700" onclick="removeItem(${idx})">✕</button>
+          </div>
+        `;
+        summaryDiv.appendChild(row);
+      });
     }
 
-    function closeItemForm() {
-      document.getElementById('item-form-container').classList.add('hidden');
-    }
+    window.removeItem = function(idx) {
+      cartItems.splice(idx, 1);
+      updateCartSummary();
+    };
 
-    function openSterilForm() {
-      closeItemForm();
-      const formContainer = document.getElementById('sterilization-form-container');
-      formContainer.classList.remove('hidden');
-      formContainer.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function closeSterilForm() {
-      document.getElementById('sterilization-form-container').classList.add('hidden');
-    }
-
-    async function saveItemEntry() {
-      const category = document.getElementById('department-category').value;
-      const deptName = document.getElementById('department-name').value.trim();
-      const instrument = document.getElementById('instrument-name').value.trim();
-      const qty = document.getElementById('instrument-qty').value;
-      const note = document.getElementById('item-note').value.trim();
-
-      if (!instrument) {
-        alert("Molimo unesite naziv instrumenta ili seta.");
+    async function saveFinalEntry() {
+      if (cartItems.length === 0) {
+        alert("Molimo dodajte bar jedan instrument ili set.");
         return;
       }
 
       try {
-        await addDoc(collection(db, "sterilizations"), {
-          vrsta: currentItemType, // PRIJEM ili IZDAVANJE
-          kategorija: category,
-          odjel: deptName || category,
-          instrument: instrument,
-          kolicina: qty,
-          napomena: note,
+        await addDoc(collection(db, currentType === "PRIJEM" ? "prijem_evidencija" : "izdavanje_evidencija"), {
+          vrsta: currentType,
+          kategorija: selectedCategory,
+          odjel: selectedDepartment,
+          stavke: cartItems,
           operaterEmail: currentUser.email,
           datum: serverTimestamp()
         });
 
-        alert(`Uspješno zabilježen ${currentItemType}!`);
-        
-        document.getElementById('department-name').value = '';
-        document.getElementById('instrument-name').value = '';
-        document.getElementById('instrument-qty').value = '1';
-        document.getElementById('item-note').value = '';
-        closeItemForm();
-
+        alert(`Uspješno spremljena evidencija u ${currentType}!`);
+        resetToMain();
       } catch (err) {
         alert("Greška kod spremanja: " + err.message);
       }
     }
 
-    async function saveSterilCycleEntry() {
-      const device = document.getElementById('sterilizer-id').value.trim();
-      const cycle = document.getElementById('cycle-number').value.trim();
-      const program = document.getElementById('program-type').value;
-      const indicator = document.getElementById('indicator-status').value;
-      const note = document.getElementById('steril-note').value.trim();
-
-      if (!device || !cycle) {
-        alert("Molimo unesite naziv uređaja i broj ciklusa.");
-        return;
-      }
-
-      try {
-        await addDoc(collection(db, "sterilizations"), {
-          vrsta: "CIKLUS",
-          uređaj: device,
-          ciklus: cycle,
-          program: program,
-          indikator: indicator,
-          napomena: note,
-          operaterEmail: currentUser.email,
-          datum: serverTimestamp()
-        });
-
-        alert("Ciklus sterilizacije uspješno spremljen!");
-        
-        document.getElementById('sterilizer-id').value = '';
-        document.getElementById('cycle-number').value = '';
-        document.getElementById('steril-note').value = '';
-        closeSterilForm();
-
-      } catch (err) {
-        alert("Greška kod spremanja: " + err.message);
-      }
+    function resetToMain() {
+      document.getElementById('step-main-choice').classList.remove('hidden');
+      document.getElementById('step-categories').classList.add('hidden');
+      document.getElementById('step-departments').classList.add('hidden');
+      document.getElementById('step-instruments').classList.add('hidden');
+      document.getElementById('subgroup-modal').classList.add('hidden');
+      document.getElementById('qty-modal').classList.add('hidden');
+      document.getElementById('order-sets-modal').classList.add('hidden');
+      cartItems = [];
     }
 
-    // Praćenje Auth stanja
+    // FIREBASE AUTH I LISTANJE
     onAuthStateChanged(auth, async (user) => {
-      const authContainer = document.getElementById('auth-container');
-      const pendingContainer = document.getElementById('pending-container');
-      const appContainer = document.getElementById('app-container');
-      const btnLogout = document.getElementById('btn-logout');
-
       if (user) {
         currentUser = user;
-        btnLogout.classList.remove('hidden');
-        authContainer.classList.add('hidden');
+        document.getElementById('btn-logout').classList.remove('hidden');
+        document.getElementById('auth-container').classList.add('hidden');
 
         const userDoc = await getDoc(doc(db, "users", user.uid));
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-
-          if (userData.status === "aktivan") {
-            pendingContainer.classList.add('hidden');
-            appContainer.classList.remove('hidden');
-
-            if (userData.uloga === "admin") {
-              document.getElementById('admin-panel').classList.remove('hidden');
-              loadPendingUsers();
-            }
-
-            loadSterilizationLogs();
-          } else {
-            pendingContainer.classList.remove('hidden');
-            appContainer.classList.add('hidden');
-          }
+        if (userDoc.exists() && userDoc.data().status === "aktivan") {
+          document.getElementById('pending-container').classList.add('hidden');
+          document.getElementById('app-container').classList.remove('hidden');
+          loadLogs();
+        } else {
+          document.getElementById('pending-container').classList.remove('hidden');
+          document.getElementById('app-container').classList.add('hidden');
         }
       } else {
         currentUser = null;
-        btnLogout.classList.add('hidden');
-        authContainer.classList.remove('hidden');
-        pendingContainer.classList.add('hidden');
-        appContainer.classList.add('hidden');
+        document.getElementById('btn-logout').classList.add('hidden');
+        document.getElementById('auth-container').classList.remove('hidden');
+        document.getElementById('app-container').classList.add('hidden');
       }
     });
 
-    function loadPendingUsers() {
-      const q = query(collection(db, "users"), where("status", "==", "na_cekanju"));
-      onSnapshot(q, (snapshot) => {
-        const listDiv = document.getElementById('pending-users-list');
-        listDiv.innerHTML = "";
+    document.getElementById('auth-toggle-link').addEventListener('click', () => {
+      const reg = document.getElementById('reg-fields');
+      reg.classList.toggle('hidden');
+      const isReg = !reg.classList.contains('hidden');
+      document.getElementById('auth-title').textContent = isReg ? 'Registracija računa' : 'Prijava u sustav';
+      document.getElementById('btn-auth-action').textContent = isReg ? 'Pošalji zahtjev' : 'Prijavi se';
+    });
 
-        if (snapshot.empty) {
-          listDiv.innerHTML = '<p class="text-gray-500 italic">Nema novih zahtjeva.</p>';
-          return;
-        }
+    document.getElementById('btn-auth-action').addEventListener('click', async () => {
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const name = document.getElementById('auth-name').value.trim();
+      const isReg = !document.getElementById('reg-fields').classList.contains('hidden');
 
-        snapshot.forEach((userDoc) => {
-          const u = userDoc.data();
-          const item = document.createElement('div');
-          item.className = "flex justify-between items-center bg-white p-2 rounded border";
-          item.innerHTML = `
-            <div>
-              <p class="font-bold text-gray-800">${u.ime}</p>
-              <p class="text-xs text-gray-500">${u.email}</p>
-            </div>
-            <button class="btn-approve bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-bold" data-uid="${u.uid}">
-              Odobri
-            </button>
-          `;
-          listDiv.appendChild(item);
-        });
+      if (!email || !password) return alert("Unesite e-mail i lozinku.");
 
-        document.querySelectorAll('.btn-approve').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const uid = e.target.getAttribute('data-uid');
-            approveUser(uid);
-          });
-        });
-      });
-    }
-
-    function loadSterilizationLogs() {
-      onSnapshot(collection(db, "sterilizations"), (snapshot) => {
-        const listDiv = document.getElementById('sterilization-list');
-        listDiv.innerHTML = "";
-
-        if (snapshot.empty) {
-          listDiv.innerHTML = '<p class="text-gray-500 italic text-sm">Nema zabilježenih unosa.</p>';
-          return;
-        }
-
-        snapshot.forEach((docItem) => {
-          const data = docItem.data();
-          const item = document.createElement('div');
-          item.className = "p-3 border rounded-lg bg-gray-50 text-sm shadow-sm space-y-1";
-
-          if (data.vrsta === 'CIKLUS') {
-            item.innerHTML = `
-              <div class="flex justify-between items-center">
-                <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold">🧪 CIKLUS</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${data.indikator === 'USPJEŠNO' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                  ${data.indikator}
-                </span>
-              </div>
-              <p class="font-bold text-gray-800">${data.uređaj} (#${data.ciklus}) - ${data.program}</p>
-              ${data.napomena ? `<p class="text-xs text-gray-500">📝 ${data.napomena}</p>` : ''}
-              <p class="text-[10px] text-gray-400">Unio: ${data.operaterEmail}</p>
-            `;
-          } else {
-            const isPrijem = data.vrsta === 'PRIJEM';
-            const badge = isPrijem 
-              ? '<span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-[10px] font-bold">📥 PRIJEM</span>' 
-              : '<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded text-[10px] font-bold">📤 IZDAVANJE</span>';
-
-            item.innerHTML = `
-              <div class="flex justify-between items-center">
-                ${badge}
-                <span class="text-xs font-bold text-gray-600">${data.kategorija || ''}</span>
-              </div>
-              <p class="font-bold text-gray-800">${data.instrument} (x${data.kolicina || 1})</p>
-              <p class="text-xs text-gray-600">Odjel: ${data.odjel || '-'}</p>
-              ${data.napomena ? `<p class="text-xs text-gray-500">📝 ${data.napomena}</p>` : ''}
-              <p class="text-[10px] text-gray-400">Unio: ${data.operaterEmail}</p>
-            `;
-          }
-
-          listDiv.appendChild(item);
-        });
-      });
-    }
-
-    async function approveUser(uid) {
       try {
-        await updateDoc(doc(db, "users", uid), {
-          status: "aktivan"
-        });
-        alert("Korisnik odobren!");
-      } catch (err) {
-        alert("Greška kod odobravanja: " + err.message);
+        if (isReg) {
+          if (!name) return alert("Unesite ime.");
+          const res = await createUserWithEmailAndPassword(auth, email, password);
+          await setDoc(doc(db, "users", res.user.uid), {
+            uid: res.user.uid, email, ime: name, uloga: "korisnik", status: "na_cekanju", datum: serverTimestamp()
+          });
+        } else {
+          await signInWithEmailAndPassword(auth, email, password);
+        }
+      } catch (e) {
+        alert("Greška: " + e.message);
       }
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+
+    function loadLogs() {
+      onSnapshot(collection(db, "prijem_evidencija"), (snapshot) => {
+        const list = document.getElementById('logs-list');
+        list.innerHTML = "";
+        if (snapshot.empty) {
+          list.innerHTML = '<p class="text-gray-500 italic text-sm">Nema zapisa.</p>';
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const item = document.createElement('div');
+          item.className = "p-3 border rounded-lg bg-gray-50 text-xs space-y-1";
+          
+          let itemsText = d.stavke ? d.stavke.map(s => `${s.naziv} (x${s.kolicina})`).join(', ') : '-';
+
+          item.innerHTML = `
+            <div class="flex justify-between font-bold">
+              <span class="text-green-700">📥 ${d.vrsta || 'PRIJEM'} - ${d.kategorija}</span>
+              <span class="text-gray-500">${d.odjel}</span>
+            </div>
+            <p class="text-gray-800"><strong>Stavke:</strong> ${itemsText}</p>
+            <p class="text-[10px] text-gray-400">Unio: ${d.operaterEmail}</p>
+          `;
+          list.appendChild(item);
+        });
+      });
     }
   </script>
 </body>
