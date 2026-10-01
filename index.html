@@ -13,9 +13,15 @@
   <!-- ZAGLAVLJE -->
   <header class="bg-blue-600 text-white shadow-md p-4 flex justify-between items-center">
     <h1 class="text-xl font-bold tracking-wide">Steri-app</h1>
-    <button id="btn-logout" class="hidden bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-semibold transition">
-      Odjava
-    </button>
+    <div class="flex items-center gap-2">
+      <!-- GUMB ZA ADMIN PANEL (Prikazuje se samo ako je uloga admin) -->
+      <button id="btn-admin-panel" class="hidden bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded text-sm font-semibold transition flex items-center gap-1">
+        <span>👑</span> Admin Panel
+      </button>
+      <button id="btn-logout" class="hidden bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-semibold transition">
+        Odjava
+      </button>
+    </div>
   </header>
 
   <main class="flex-grow container mx-auto p-4 max-w-lg flex flex-col justify-center">
@@ -60,6 +66,33 @@
       </div>
       <h2 class="text-xl font-bold text-gray-800">Račun čeka odobrenje</h2>
       <p class="text-gray-600 text-sm">Zahtjev je poslan. Administrator mora odobriti Vaš račun.</p>
+    </div>
+
+    <!-- EKRAN: ADMIN PANEL (SAMO ZA ULOGU ADMIN) -->
+    <div id="admin-panel-screen" class="hidden bg-white p-6 rounded-xl shadow-lg border border-amber-200 space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <span>👑</span> Admin Panel - Upravljanje računima
+        </h2>
+        <button id="btn-close-admin" type="button" class="text-gray-500 hover:text-gray-700 font-bold text-sm bg-gray-200 px-3 py-1 rounded-lg">
+          ✕ Zatvori
+        </button>
+      </div>
+
+      <!-- FILTER KORISNIKA -->
+      <div class="flex border-b pb-2 gap-2 text-xs font-semibold">
+        <button id="btn-admin-filter-pending" type="button" class="px-3 py-1.5 rounded-lg bg-amber-500 text-white">
+          Čekaju odobrenje (<span id="pending-count">0</span>)
+        </button>
+        <button id="btn-admin-filter-all" type="button" class="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300">
+          Svi korisnici
+        </button>
+      </div>
+
+      <!-- LISTA KORISNIKA ZA ODOBRENJE -->
+      <div id="admin-users-list" class="space-y-3 max-h-96 overflow-y-auto p-1">
+        <p class="text-gray-500 italic text-sm text-center">Učitavanje korisnika...</p>
+      </div>
     </div>
 
     <!-- EKRAN 3: GLAVNA APLIKACIJA -->
@@ -319,6 +352,10 @@
   let editingCollection = null;
   let editingItems = [];
 
+  // ADMIN PANEL VARIJABLE
+  let allUsersList = [];
+  let adminViewPendingOnly = true;
+
   const departmentsData = {
     "Kirurgija": ["Abdomen (ABD)", "Dječja kirurgija", "Dječja ambulanta", "JIL", "Opća ambulanta", "ORL ambulanta", "ORL odjel", "Ortopedska ambulanta", "Traumatološki odjel", "Traumatološka ambulanta", "Urološka ambulanta", "Urološki odjel", "Vaskularna"],
     "Ginekologija": ["Gin. odjel", "Novorođenački", "Rađaona", "Rodilište", "UZV"],
@@ -383,9 +420,10 @@
               email, 
               ime: name, 
               uloga: "korisnik", 
-              status: "aktivan",
+              status: "na_cekanju",
               datum: serverTimestamp()
             });
+            alert("Zahtjev za registraciju poslan! Pričekajte odobrenje administratora.");
           } else {
             await signInWithEmailAndPassword(auth, email, password);
           }
@@ -398,6 +436,44 @@
     // ODJAVA
     const btnLogout = document.getElementById('btn-logout');
     if (btnLogout) btnLogout.addEventListener('click', () => signOut(auth));
+
+    // ADMIN PANEL DUGMAD I NAVIGACIJA
+    const btnAdminPanel = document.getElementById('btn-admin-panel');
+    if (btnAdminPanel) {
+      btnAdminPanel.addEventListener('click', () => {
+        document.getElementById('app-container').classList.add('hidden');
+        document.getElementById('step-history-screen').classList.add('hidden');
+        document.getElementById('admin-panel-screen').classList.remove('hidden');
+      });
+    }
+
+    const btnCloseAdmin = document.getElementById('btn-close-admin');
+    if (btnCloseAdmin) {
+      btnCloseAdmin.addEventListener('click', () => {
+        document.getElementById('admin-panel-screen').classList.add('hidden');
+        document.getElementById('app-container').classList.remove('hidden');
+      });
+    }
+
+    const btnFilterPending = document.getElementById('btn-admin-filter-pending');
+    if (btnFilterPending) {
+      btnFilterPending.addEventListener('click', () => {
+        adminViewPendingOnly = true;
+        btnFilterPending.className = "px-3 py-1.5 rounded-lg bg-amber-500 text-white";
+        document.getElementById('btn-admin-filter-all').className = "px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300";
+        renderAdminUsersList();
+      });
+    }
+
+    const btnFilterAll = document.getElementById('btn-admin-filter-all');
+    if (btnFilterAll) {
+      btnFilterAll.addEventListener('click', () => {
+        adminViewPendingOnly = false;
+        btnFilterAll.className = "px-3 py-1.5 rounded-lg bg-amber-500 text-white";
+        document.getElementById('btn-admin-filter-pending').className = "px-3 py-1.5 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300";
+        renderAdminUsersList();
+      });
+    }
 
     // NAVIGACIJA
     const btnPrijem = document.getElementById('btn-prijem');
@@ -566,9 +642,11 @@
   // ODRŽAVANJE AUTENTIFIKACIJSKOG STANJA
   onAuthStateChanged(auth, async (user) => {
     const btnLogout = document.getElementById('btn-logout');
+    const btnAdminPanel = document.getElementById('btn-admin-panel');
     const authCont = document.getElementById('auth-container');
     const appCont = document.getElementById('app-container');
     const pendingCont = document.getElementById('pending-container');
+    const adminCont = document.getElementById('admin-panel-screen');
 
     if (user) {
       currentUser = user;
@@ -579,34 +657,155 @@
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
           currentUserData = userDoc.data();
-          if (!currentUserData.status || currentUserData.status === "aktivan") {
+          
+          // Prikaži admin gumb ako je korisnik admin
+          if (currentUserData.uloga === "admin") {
+            if (btnAdminPanel) btnAdminPanel.classList.remove('hidden');
+            listenToUsersCollection();
+          } else {
+            if (btnAdminPanel) btnAdminPanel.classList.add('hidden');
+          }
+
+          // Provjera statusa računa
+          if (currentUserData.status === "aktivan" || currentUserData.uloga === "admin") {
             if (pendingCont) pendingCont.classList.add('hidden');
             if (appCont) appCont.classList.remove('hidden');
             loadAllLogs();
           } else {
             if (pendingCont) pendingCont.classList.remove('hidden');
             if (appCont) appCont.classList.add('hidden');
+            if (adminCont) adminCont.classList.add('hidden');
           }
         } else {
-          if (pendingCont) pendingCont.classList.add('hidden');
-          if (appCont) appCont.classList.remove('hidden');
-          loadAllLogs();
+          if (pendingCont) pendingCont.classList.remove('hidden');
+          if (appCont) appCont.classList.add('hidden');
         }
       } catch (e) {
         console.error("Greška provjere korisnika:", e);
-        if (pendingCont) pendingCont.classList.add('hidden');
-        if (appCont) appCont.classList.remove('hidden');
-        loadAllLogs();
+        if (pendingCont) pendingCont.classList.remove('hidden');
+        if (appCont) appCont.classList.add('hidden');
       }
     } else {
       currentUser = null;
       currentUserData = null;
       if (btnLogout) btnLogout.classList.add('hidden');
+      if (btnAdminPanel) btnAdminPanel.classList.add('hidden');
       if (authCont) authCont.classList.remove('hidden');
       if (appCont) appCont.classList.add('hidden');
       if (pendingCont) pendingCont.classList.add('hidden');
+      if (adminCont) adminCont.classList.add('hidden');
     }
   });
+
+  // FIRESTORE SLUŠAČ ZA ADMIN PANEL (KORISNICI)
+  function listenToUsersCollection() {
+    onSnapshot(collection(db, "users"), (snapshot) => {
+      allUsersList = [];
+      snapshot.forEach(doc => {
+        allUsersList.push({ uid: doc.id, ...doc.data() });
+      });
+
+      const pendingUsers = allUsersList.filter(u => u.status === "na_cekanju");
+      const badge = document.getElementById('pending-count');
+      if (badge) badge.textContent = pendingUsers.length;
+
+      renderAdminUsersList();
+    }, (err) => console.error("Greška kod učitavanja korisnika:", err));
+  }
+
+  function renderAdminUsersList() {
+    const list = document.getElementById('admin-users-list');
+    if (!list) return;
+    list.innerHTML = "";
+
+    let displayedUsers = adminViewPendingOnly 
+      ? allUsersList.filter(u => u.status === "na_cekanju") 
+      : allUsersList;
+
+    if (displayedUsers.length === 0) {
+      list.innerHTML = `<p class="text-gray-500 italic text-sm text-center py-4">Nema korisnika za prikaz.</p>`;
+      return;
+    }
+
+    displayedUsers.forEach(u => {
+      const isPending = u.status === "na_cekanju";
+      const card = document.createElement('div');
+      card.className = "p-3 border rounded-lg bg-gray-50 flex flex-col gap-2 text-xs";
+
+      card.innerHTML = `
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="font-bold text-gray-900 text-sm">${u.ime || 'Nema imena'}</p>
+            <p class="text-gray-600">${u.email}</p>
+          </div>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isPending ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">
+            ${isPending ? 'ČEKA ODOBRENJE' : 'AKTIVAN'}
+          </span>
+        </div>
+
+        <div class="flex items-center justify-between border-t pt-2 mt-1">
+          <div class="flex items-center gap-1">
+            <span class="text-gray-500 font-semibold">Uloga:</span>
+            <select class="btn-change-role border rounded p-1 text-xs bg-white font-medium" data-uid="${u.uid}">
+              <option value="korisnik" ${u.uloga === 'korisnik' ? 'selected' : ''}>Korisnik</option>
+              <option value="moderator" ${u.uloga === 'moderator' ? 'selected' : ''}>Moderator</option>
+              <option value="admin" ${u.uloga === 'admin' ? 'selected' : ''}>Admin</option>
+            </select>
+          </div>
+
+          <div class="flex gap-2">
+            ${isPending ? `<button type="button" class="btn-approve-user bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 rounded transition text-xs" data-uid="${u.uid}">✓ Odobri</button>` : ''}
+            <button type="button" class="btn-toggle-status bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-2 py-1 rounded transition text-xs" data-uid="${u.uid}" data-status="${u.status}">
+              ${isPending ? 'Blokiraj' : 'Deaktiviraj'}
+            </button>
+          </div>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+
+    // SLUŠAČI ZA AKCIJE U ADMIN PANELU
+    list.querySelectorAll('.btn-approve-user').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const uid = e.target.getAttribute('data-uid');
+        try {
+          await updateDoc(doc(db, "users", uid), { status: "aktivan" });
+          alert("Korisnik je uspješno odobren!");
+        } catch (err) {
+          alert("Greška: " + err.message);
+        }
+      });
+    });
+
+    list.querySelectorAll('.btn-change-role').forEach(select => {
+      select.addEventListener('change', async (e) => {
+        const uid = e.target.getAttribute('data-uid');
+        const newRole = e.target.value;
+        try {
+          await updateDoc(doc(db, "users", uid), { uloga: newRole });
+          alert(`Uloga korisnika promijenjena u: ${newRole}`);
+        } catch (err) {
+          alert("Greška kod promjene uloge: " + err.message);
+        }
+      });
+    });
+
+    list.querySelectorAll('.btn-toggle-status').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const uid = e.target.getAttribute('data-uid');
+        const currentStatus = e.target.getAttribute('data-status');
+        const newStatus = currentStatus === "aktivan" ? "deaktiviran" : "aktivan";
+        
+        if (confirm(`Jeste li sigurni da želite promijeniti status u: ${newStatus}?`)) {
+          try {
+            await updateDoc(doc(db, "users", uid), { status: newStatus });
+          } catch (err) {
+            alert("Greška: " + err.message);
+          }
+        }
+      });
+    });
+  }
 
   // POMOĆNE FUNKCIJE TIJEKA
   function startFlow(type) {
@@ -799,6 +998,7 @@
   function resetToMain() {
     document.getElementById('step-main-choice').classList.remove('hidden');
     document.getElementById('step-history-screen').classList.add('hidden');
+    document.getElementById('admin-panel-screen').classList.add('hidden');
     document.getElementById('step-categories').classList.add('hidden');
     document.getElementById('step-departments').classList.add('hidden');
     document.getElementById('step-instruments').classList.add('hidden');
@@ -924,7 +1124,7 @@
         <p class="text-gray-700 font-semibold">Odjel: <span class="font-normal text-gray-900">${d.odjel || ''}</span></p>
         <p class="text-gray-800"><strong>Stavke:</strong> ${itemsText}</p>
         <p class="text-[10px] text-gray-400">Unio: ${displayAuthor}${lastEditedText}</p>
-        ${showEdit ? `<button type="button" class="btn-edit-log absolute top-2 right-2 text-blue-600 hover:text-blue-800 font-bold text-sm" data-id="${d.id}" data-coll="${d.collectionName}">✏️️</button>` : ''}
+        ${showEdit ? `<button type="button" class="btn-edit-log absolute top-2 right-2 text-blue-600 hover:text-blue-800 font-bold text-sm" data-id="${d.id}" data-coll="${d.collectionName}">✏</button>` : ''}
       `;
       list.appendChild(item);
     });
@@ -974,7 +1174,6 @@
       container.appendChild(row);
     });
 
-    // Slušači za promjene u poljima
     container.querySelectorAll('.edit-item-name').forEach(inp => {
       inp.addEventListener('input', (e) => {
         const idx = parseInt(e.target.getAttribute('data-idx'), 10);
