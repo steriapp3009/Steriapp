@@ -14,7 +14,7 @@
   <header class="bg-blue-600 text-white shadow-md p-4 flex justify-between items-center">
     <h1 class="text-xl font-bold tracking-wide">Steri-app</h1>
     <div class="flex items-center gap-2">
-      <!-- GUMB ZA ADMIN PANEL (Prikazuje se samo ako je uloga admin) -->
+      <!-- GUMB ZA ADMIN PANEL (Samo za ulogu admin) -->
       <button id="btn-admin-panel" class="hidden bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded text-sm font-semibold transition flex items-center gap-1">
         <span>👑</span> Admin Panel
       </button>
@@ -95,6 +95,25 @@
       </div>
     </div>
 
+    <!-- EKRAN: PREGLED NARUDŽBI SETOVA (SAMO ZA ADMIN / MODERATOR) -->
+    <div id="orders-screen" class="hidden bg-white p-6 rounded-xl shadow-lg border border-amber-200 space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <span>📦</span> Pregled Narudžbi Setova
+        </h2>
+        <button id="btn-close-orders" type="button" class="text-gray-500 hover:text-gray-700 font-bold text-sm bg-gray-200 px-3 py-1 rounded-lg">
+          ✕ Zatvori
+        </button>
+      </div>
+
+      <p class="text-xs text-gray-500">Prikaz svih naručenih i izdanih setova za odabrani datum sa svih odjela.</p>
+
+      <!-- LISTA NARUDŽBI SETOVA -->
+      <div id="orders-list" class="space-y-3 max-h-96 overflow-y-auto p-1">
+        <p class="text-gray-500 italic text-sm text-center">Nema narudžbi za odabrani datum.</p>
+      </div>
+    </div>
+
     <!-- EKRAN 3: GLAVNA APLIKACIJA -->
     <div id="app-container" class="hidden space-y-6">
 
@@ -116,6 +135,11 @@
             <span class="text-2xl">📤</span> IZDAVANJE
           </button>
         </div>
+
+        <!-- GUMB ZA NARUDŽBE SETOVA (SAMO ZA ADMIN / MODERATOR) -->
+        <button id="btn-open-orders-screen" type="button" class="hidden w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl shadow-md text-base transition flex items-center justify-center gap-2">
+          <span>📦</span> Narudžbe setova (Složeno / Izdano)
+        </button>
 
         <!-- GUMB ZA POVIJEST -->
         <button id="btn-open-history" type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md text-base transition flex items-center justify-center gap-2">
@@ -246,13 +270,13 @@
         <div id="order-sets-modal" class="hidden bg-amber-50 p-4 rounded-xl border border-amber-200 space-y-3">
           <h4 class="font-bold text-amber-900 text-sm">Odaberite vrstu seta:</h4>
           <div class="grid grid-cols-2 gap-2">
-            <button type="button" class="btn-set-choice bg-white hover:bg-amber-100 border border-amber-300 font-bold p-2.5 rounded-lg text-amber-900" data-set="MSBI">Set MSBI</button>
-            <button type="button" class="btn-set-choice bg-white hover:bg-amber-100 border border-amber-300 font-bold p-2.5 rounded-lg text-amber-900" data-set="SBI">Set SBI</button>
-            <button type="button" class="btn-set-choice bg-white hover:bg-amber-100 border border-amber-300 font-bold p-2.5 rounded-lg text-amber-900" data-set="UK">Set UK</button>
-            <button type="button" class="btn-set-choice bg-white hover:bg-amber-100 border border-amber-300 font-bold p-2.5 rounded-lg text-amber-900" data-set="HK">Set HK</button>
+            <button type="button" class="btn-set-choice bg-white hover:bg-amber-100 border border-amber-300 font-bold p-2.5 rounded-lg text-amber-900" data-set="Set MSBI">Set MSBI</button>
+            <button type="button" class="btn-set-choice bg-white hover:bg-amber-100 border border-amber-300 font-bold p-2.5 rounded-lg text-amber-900" data-set="Set SBI">Set SBI</button>
+            <button type="button" class="btn-set-choice bg-white hover:bg-amber-100 border border-amber-300 font-bold p-2.5 rounded-lg text-amber-900" data-set="Set UK">Set UK</button>
+            <button type="button" class="btn-set-choice bg-white hover:bg-amber-100 border border-amber-300 font-bold p-2.5 rounded-lg text-amber-900" data-set="Set HK">Set HK</button>
           </div>
           <button id="btn-order-custom" type="button" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold p-2.5 rounded-lg text-sm">
-            ✏️ Drugo (upišite naziv seta)
+            ✏️️ Drugo (upišite naziv seta)
           </button>
         </div>
 
@@ -343,6 +367,7 @@
   let selectedDepartment = "";
   let cartItems = [];
   let pendingSelectedItem = "";
+  let isAddingSet = false; // Razlikovanje instrumenata i setova
 
   let historyActiveTab = "PRIJEM";
   let prijemLogs = [];
@@ -384,6 +409,7 @@
     const dateInput = document.getElementById('entry-date');
     if (dateInput) {
       dateInput.value = new Date().toISOString().split('T')[0];
+      dateInput.addEventListener('change', () => renderOrdersScreen());
     }
 
     // TOGGLE REGISTRACIJA / PRIJAVA
@@ -437,12 +463,13 @@
     const btnLogout = document.getElementById('btn-logout');
     if (btnLogout) btnLogout.addEventListener('click', () => signOut(auth));
 
-    // ADMIN PANEL DUGMAD I NAVIGACIJA
+    // ADMIN PANEL NAVIGACIJA
     const btnAdminPanel = document.getElementById('btn-admin-panel');
     if (btnAdminPanel) {
       btnAdminPanel.addEventListener('click', () => {
         document.getElementById('app-container').classList.add('hidden');
         document.getElementById('step-history-screen').classList.add('hidden');
+        document.getElementById('orders-screen').classList.add('hidden');
         document.getElementById('admin-panel-screen').classList.remove('hidden');
       });
     }
@@ -451,6 +478,24 @@
     if (btnCloseAdmin) {
       btnCloseAdmin.addEventListener('click', () => {
         document.getElementById('admin-panel-screen').classList.add('hidden');
+        document.getElementById('app-container').classList.remove('hidden');
+      });
+    }
+
+    // EKRAN NARUDŽBI SETOVA NAVIGACIJA
+    const btnOpenOrders = document.getElementById('btn-open-orders-screen');
+    if (btnOpenOrders) {
+      btnOpenOrders.addEventListener('click', () => {
+        document.getElementById('app-container').classList.add('hidden');
+        document.getElementById('orders-screen').classList.remove('hidden');
+        renderOrdersScreen();
+      });
+    }
+
+    const btnCloseOrders = document.getElementById('btn-close-orders');
+    if (btnCloseOrders) {
+      btnCloseOrders.addEventListener('click', () => {
+        document.getElementById('orders-screen').classList.add('hidden');
         document.getElementById('app-container').classList.remove('hidden');
       });
     }
@@ -557,7 +602,7 @@
       btn.addEventListener('click', (e) => {
         const setName = e.target.getAttribute('data-set');
         document.getElementById('order-sets-modal').classList.add('hidden');
-        openQtyModal(setName);
+        openQtyModal(setName, true);
       });
     });
 
@@ -565,7 +610,7 @@
     if (orderCustomBtn) {
       orderCustomBtn.addEventListener('click', () => {
         document.getElementById('order-sets-modal').classList.add('hidden');
-        openCustomModal("Unesite naziv narudžbe / seta:");
+        openCustomModal("Unesite naziv narudžbe / seta:", true);
       });
     }
 
@@ -575,7 +620,7 @@
         const val = document.getElementById('custom-item-input').value.trim();
         if (!val) return alert("Molimo unesite naziv.");
         document.getElementById('custom-item-modal').classList.add('hidden');
-        openQtyModal(val);
+        openQtyModal(val, isAddingSet);
       });
     }
 
@@ -611,7 +656,17 @@
     if (confirmNumBtn) {
       confirmNumBtn.addEventListener('click', () => {
         const qty = parseInt(document.getElementById('qty-input').value, 10) || 1;
-        cartItems.push({ naziv: pendingSelectedItem, kolicina: qty });
+        
+        // Postavljanje statusa ovisno o tome je li Prijem ili Izdavanje
+        const initialStatus = currentType === "PRIJEM" ? "zaprimljeno" : "izdano";
+        
+        cartItems.push({ 
+          naziv: pendingSelectedItem, 
+          kolicina: qty,
+          isSet: isAddingSet,
+          status: isAddingSet ? initialStatus : null
+        });
+
         updateCartSummary();
         document.getElementById('qty-modal').classList.add('hidden');
       });
@@ -630,7 +685,7 @@
     const addItemEditBtn = document.getElementById('btn-edit-add-item');
     if (addItemEditBtn) {
       addItemEditBtn.addEventListener('click', () => {
-        editingItems.push({ naziv: "Novi instrument", kolicina: 1 });
+        editingItems.push({ naziv: "Novi instrument", kolicina: 1, isSet: false });
         renderEditModalItems();
       });
     }
@@ -643,6 +698,7 @@
   onAuthStateChanged(auth, async (user) => {
     const btnLogout = document.getElementById('btn-logout');
     const btnAdminPanel = document.getElementById('btn-admin-panel');
+    const btnOrdersScreen = document.getElementById('btn-open-orders-screen');
     const authCont = document.getElementById('auth-container');
     const appCont = document.getElementById('app-container');
     const pendingCont = document.getElementById('pending-container');
@@ -664,6 +720,13 @@
             listenToUsersCollection();
           } else {
             if (btnAdminPanel) btnAdminPanel.classList.add('hidden');
+          }
+
+          // Prikaži gumb za Narudžbe Setova ako je Admin ili Moderator
+          if (currentUserData.uloga === "admin" || currentUserData.uloga === "moderator") {
+            if (btnOrdersScreen) btnOrdersScreen.classList.remove('hidden');
+          } else {
+            if (btnOrdersScreen) btnOrdersScreen.classList.add('hidden');
           }
 
           // Provjera statusa računa
@@ -690,6 +753,7 @@
       currentUserData = null;
       if (btnLogout) btnLogout.classList.add('hidden');
       if (btnAdminPanel) btnAdminPanel.classList.add('hidden');
+      if (btnOrdersScreen) btnOrdersScreen.classList.add('hidden');
       if (authCont) authCont.classList.remove('hidden');
       if (appCont) appCont.classList.add('hidden');
       if (pendingCont) pendingCont.classList.add('hidden');
@@ -764,7 +828,6 @@
       list.appendChild(card);
     });
 
-    // SLUŠAČI ZA AKCIJE U ADMIN PANELU
     list.querySelectorAll('.btn-approve-user').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const uid = e.target.getAttribute('data-uid');
@@ -801,6 +864,87 @@
             await updateDoc(doc(db, "users", uid), { status: newStatus });
           } catch (err) {
             alert("Greška: " + err.message);
+          }
+        }
+      });
+    });
+  }
+
+  // PREGLED I UPRAVLJANJE STATUSIMA NARUDŽBI SETOVA
+  function renderOrdersScreen() {
+    const list = document.getElementById('orders-list');
+    if (!list) return;
+    list.innerHTML = "";
+
+    const selectedDate = document.getElementById('entry-date')?.value;
+    const allLogs = [...prijemLogs, ...izdavanjeLogs];
+
+    // Filtriraj zapise za taj datum koji u sebi imaju barem jedan SET
+    const dateLogs = allLogs.filter(log => log.datumEvidencije === selectedDate && log.stavke && log.stavke.some(s => s.isSet));
+
+    if (dateLogs.length === 0) {
+      list.innerHTML = `<p class="text-gray-500 italic text-sm text-center py-4">Nema narudžbi setova za datum ${selectedDate}.</p>`;
+      return;
+    }
+
+    dateLogs.forEach(log => {
+      log.stavke.forEach((item, itemIdx) => {
+        if (!item.isSet) return; // Preskoči obične instrumente
+
+        const card = document.createElement('div');
+        card.className = "p-3 border rounded-lg bg-amber-50/60 border-amber-200 space-y-2 text-xs";
+
+        const currentStatus = item.status || (log.vrsta === "PRIJEM" ? "zaprimljeno" : "izdano");
+
+        let statusBadgeClass = "bg-yellow-100 text-yellow-800 border-yellow-300";
+        if (currentStatus === "složeno") statusBadgeClass = "bg-blue-100 text-blue-800 border-blue-300";
+        if (currentStatus === "izdano") statusBadgeClass = "bg-green-100 text-green-800 border-green-300";
+
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="font-bold text-gray-900 text-sm">${item.naziv} (x${item.kolicina})</span>
+              <p class="text-gray-600">${log.kategorija} → <span class="font-semibold text-gray-800">${log.odjel}</span></p>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${statusBadgeClass} uppercase">
+              ${currentStatus}
+            </span>
+          </div>
+
+          <div class="flex items-center justify-between border-t border-amber-200 pt-2 mt-1">
+            <span class="text-[10px] text-gray-500">Unio: ${log.operaterIme || log.operaterEmail}</span>
+            <div class="flex gap-1">
+              <button type="button" class="btn-change-set-status bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-[10px] font-bold transition" data-logid="${log.id}" data-coll="${log.collectionName}" data-itemidx="${itemIdx}" data-status="zaprimljeno">Zaprimljeno</button>
+              <button type="button" class="btn-change-set-status bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-[10px] font-bold transition" data-logid="${log.id}" data-coll="${log.collectionName}" data-itemidx="${itemIdx}" data-status="složeno">Složeno</button>
+              <button type="button" class="btn-change-set-status bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-[10px] font-bold transition" data-logid="${log.id}" data-coll="${log.collectionName}" data-itemidx="${itemIdx}" data-status="izdano">Izdano</button>
+            </div>
+          </div>
+        `;
+
+        list.appendChild(card);
+      });
+    });
+
+    list.querySelectorAll('.btn-change-set-status').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const logId = e.target.getAttribute('data-logid');
+        const coll = e.target.getAttribute('data-coll');
+        const itemIdx = parseInt(e.target.getAttribute('data-itemidx'), 10);
+        const newStatus = e.target.getAttribute('data-status');
+
+        const sourceList = coll === "prijem_evidencija" ? prijemLogs : izdavanjeLogs;
+        const targetLog = sourceList.find(l => l.id === logId);
+
+        if (targetLog && targetLog.stavke && targetLog.stavke[itemIdx]) {
+          targetLog.stavke[itemIdx].status = newStatus;
+
+          try {
+            await updateDoc(doc(db, coll, logId), {
+              stavke: targetLog.stavke
+            });
+            renderOrdersScreen();
+          } catch (err) {
+            alert("Greška pri izmjeni statusa: " + err.message);
           }
         }
       });
@@ -868,7 +1012,7 @@
       if (item.isCustom) {
         btn.className = "w-full flex justify-between items-center bg-purple-50 border border-purple-200 p-3 rounded-lg text-sm font-semibold text-purple-900 shadow-sm hover:bg-purple-100";
         btn.innerHTML = `<span>✏ ${item.name} (Ručni unos)</span> <span class="text-xs text-purple-500">+</span>`;
-        btn.onclick = () => openCustomModal("Unesite naziv instrumenta:");
+        btn.onclick = () => openCustomModal("Unesite naziv instrumenta:", false);
       } else {
         btn.className = "w-full flex justify-between items-center bg-white border p-3 rounded-lg text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-100";
         btn.innerHTML = `<span>${item.name}</span> <span class="text-xs text-gray-400">${item.hasSub ? '►' : '+'}</span>`;
@@ -877,7 +1021,7 @@
           if (item.hasSub) {
             openSubgroupModal(item);
           } else {
-            openQtyModal(item.name);
+            openQtyModal(item.name, false);
           }
         };
       }
@@ -898,7 +1042,7 @@
       btn.textContent = sub;
       btn.onclick = () => {
         modal.classList.add('hidden');
-        openQtyModal(sub);
+        openQtyModal(sub, false);
       };
       list.appendChild(btn);
     });
@@ -906,7 +1050,8 @@
     modal.classList.remove('hidden');
   }
 
-  function openCustomModal(titleText) {
+  function openCustomModal(titleText, setFlag = false) {
+    isAddingSet = setFlag;
     document.getElementById('subgroup-modal').classList.add('hidden');
     document.getElementById('qty-modal').classList.add('hidden');
     document.getElementById('custom-item-title').textContent = titleText;
@@ -914,7 +1059,8 @@
     document.getElementById('custom-item-modal').classList.remove('hidden');
   }
 
-  function openQtyModal(itemName) {
+  function openQtyModal(itemName, setFlag = false) {
+    isAddingSet = setFlag;
     pendingSelectedItem = itemName;
     document.getElementById('subgroup-modal').classList.add('hidden');
     document.getElementById('custom-item-modal').classList.add('hidden');
@@ -937,7 +1083,7 @@
       const row = document.createElement('div');
       row.className = "flex justify-between items-center text-xs border-b pb-1 last:border-0";
       row.innerHTML = `
-        <span class="font-bold text-gray-800">${ci.naziv}</span>
+        <span class="font-bold text-gray-800">${ci.isSet ? '📦 ' : ''}${ci.naziv}</span>
         <div class="flex items-center gap-2">
           <span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded">${ci.kolicina} kom</span>
           <button type="button" class="btn-remove-item text-red-500 font-bold text-sm hover:text-red-700" data-idx="${idx}">✕</button>
@@ -999,6 +1145,7 @@
     document.getElementById('step-main-choice').classList.remove('hidden');
     document.getElementById('step-history-screen').classList.add('hidden');
     document.getElementById('admin-panel-screen').classList.add('hidden');
+    document.getElementById('orders-screen').classList.add('hidden');
     document.getElementById('step-categories').classList.add('hidden');
     document.getElementById('step-departments').classList.add('hidden');
     document.getElementById('step-instruments').classList.add('hidden');
@@ -1016,6 +1163,7 @@
       snapshot.forEach(doc => prijemLogs.push({ id: doc.id, collectionName: "prijem_evidencija", ...doc.data() }));
       renderCombinedLogs();
       renderHistoryList();
+      renderOrdersScreen();
     }, (err) => console.error("Snapshot error (prijem):", err));
 
     onSnapshot(collection(db, "izdavanje_evidencija"), (snapshot) => {
@@ -1023,6 +1171,7 @@
       snapshot.forEach(doc => izdavanjeLogs.push({ id: doc.id, collectionName: "izdavanje_evidencija", ...doc.data() }));
       renderCombinedLogs();
       renderHistoryList();
+      renderOrdersScreen();
     }, (err) => console.error("Snapshot error (izdavanje):", err));
   }
 
@@ -1056,7 +1205,7 @@
       const item = document.createElement('div');
       item.className = "p-3 border rounded-lg bg-gray-50 text-xs space-y-1 relative";
       
-      let itemsText = d.stavke ? d.stavke.map(s => `${s.naziv} (x${s.kolicina})`).join(', ') : '-';
+      let itemsText = d.stavke ? d.stavke.map(s => `${s.isSet ? '📦 ' : ''}${s.naziv} (x${s.kolicina})`).join(', ') : '-';
       const isPrijem = d.vrsta === "PRIJEM";
       const datumPrikaz = d.datumEvidencije ? ` | Datum: ${d.datumEvidencije}` : '';
       const displayAuthor = d.operaterIme || d.operaterEmail || '-';
@@ -1108,7 +1257,7 @@
       const item = document.createElement('div');
       item.className = "p-3 border rounded-lg bg-gray-50 text-xs space-y-1 shadow-sm relative";
       
-      let itemsText = d.stavke ? d.stavke.map(s => `${s.naziv} (x${s.kolicina})`).join(', ') : '-';
+      let itemsText = d.stavke ? d.stavke.map(s => `${s.isSet ? '📦 ' : ''}${s.naziv} (x${s.kolicina})`).join(', ') : '-';
       const isPrijem = d.vrsta === "PRIJEM";
       const datumPrikaz = d.datumEvidencije ? `Datum: ${d.datumEvidencije}` : '';
       const displayAuthor = d.operaterIme || d.operaterEmail || '-';
