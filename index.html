@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Steri-app | Sterilizacija i evidencija</title>
+  <title>Steri-app | Evidencija sterilizacije</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -17,12 +17,9 @@
   <!-- ZAGLAVLJE -->
   <header class="bg-blue-600 text-white shadow-md p-4 flex justify-between items-center">
     <div class="flex items-center space-x-2">
-      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.59 15.12a2 2 0 01-1.022-.547l-.786-.786a2 2 0 010-2.828l1.414-1.414a2 2 0 012.828 0l.786.786a2 2 0 001.022.547l2.387.477a6 6 0 003.86-.517l.318-.158a6 6 0 013.86-.517l2.387.477a2 2 0 011.022.547l.786.786a2 2 0 010 2.828l-1.414 1.414a2 2 0 01-2.828 0l-.786-.786z"/>
-      </svg>
       <h1 class="text-xl font-bold tracking-wide">Steri-app</h1>
     </div>
-    <button id="btn-logout" class="hidden bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-semibold transition" onclick="logout()">
+    <button id="btn-logout" class="hidden bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-semibold transition">
       Odjava
     </button>
   </header>
@@ -52,14 +49,14 @@
           <input type="password" id="auth-password" placeholder="••••••••" class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
         </div>
 
-        <button id="btn-auth-action" onclick="handleAuthAction()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow transition">
+        <button id="btn-auth-action" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow transition">
           Prijavi se
         </button>
       </div>
 
       <div class="mt-6 text-center text-sm text-gray-600">
         <span id="auth-toggle-text">Nemate račun?</span>
-        <button id="auth-toggle-link" onclick="toggleAuthMode()" class="text-blue-600 font-bold ml-1 hover:underline focus:outline-none">
+        <button id="auth-toggle-link" class="text-blue-600 font-bold ml-1 hover:underline focus:outline-none">
           Registrirajte se
         </button>
       </div>
@@ -82,38 +79,47 @@
       <!-- ADMIN PANEL -->
       <div id="admin-panel" class="hidden bg-purple-50 p-4 rounded-xl border border-purple-200 space-y-3">
         <h3 class="font-bold text-purple-900 text-lg flex items-center gap-2">
-          <span>⚙️</span> Admin Panel - Korisnici na čekanju
+          <span>⚙️️</span> Admin Panel - Korisnici na čekanju
         </h3>
         <div id="pending-users-list" class="space-y-2 text-sm text-gray-700">
           <p class="text-gray-500 italic">Nema novih zahtjeva.</p>
         </div>
       </div>
 
-      <!-- KARTICA S DUGMETOM ZA UNOS -->
+      <!-- KARTICA S DVA GUMBA: PRIJEM I IZDAVANJE -->
       <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 text-center space-y-4">
-        <h2 class="text-xl font-bold text-gray-800">Sterilizacija i evidencija</h2>
-        <button onclick="toggleSterilizationForm()" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg shadow transition">
-          + Novi unos sterilizacije
-        </button>
+        <h2 class="text-xl font-bold text-gray-800">Evidencija sterilizacije</h2>
+        <p class="text-gray-600 text-sm">Odaberite radnju za unos instrumenata ili ciklusa:</p>
+        <div class="grid grid-cols-2 gap-4">
+          <button id="btn-open-prijem" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-lg shadow transition text-lg flex items-center justify-center gap-2">
+            <span>📥</span> Prijem
+          </button>
+          <button id="btn-open-izdavanje" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-lg shadow transition text-lg flex items-center justify-center gap-2">
+            <span>📤</span> Izdavanje
+          </button>
+        </div>
       </div>
 
       <!-- FORMULAR ZA UNOS STERILIZACIJE -->
       <div id="sterilization-form-container" class="hidden bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
-        <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Novi unos sterilizacije</h3>
+        <div class="flex justify-between items-center border-b pb-2">
+          <h3 id="form-title" class="text-lg font-bold text-gray-800">Unos</h3>
+          <span id="form-type-badge" class="px-3 py-1 rounded-full text-xs font-bold text-white"></span>
+        </div>
         
         <div>
           <label class="block text-sm font-medium text-gray-700">Uređaj / Sterilizator</label>
-          <input type="text" id="sterilizer-id" placeholder="npr. Autoklav 1" class="w-full mt-1 p-2 border rounded-lg">
+          <input type="text" id="sterilizer-id" placeholder="npr. Autoklav 1" class="w-full mt-1 p-2.5 border rounded-lg">
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700">Broj ciklusa / Sharpa</label>
-          <input type="number" id="cycle-number" placeholder="npr. 12" class="w-full mt-1 p-2 border rounded-lg">
+          <label class="block text-sm font-medium text-gray-700">Broj ciklusa / Šarža</label>
+          <input type="number" id="cycle-number" placeholder="npr. 12" class="w-full mt-1 p-2.5 border rounded-lg">
         </div>
 
         <div>
           <label class="block text-sm font-medium text-gray-700">Program / Temperatura</label>
-          <select id="program-type" class="w-full mt-1 p-2 border rounded-lg">
+          <select id="program-type" class="w-full mt-1 p-2.5 border rounded-lg">
             <option value="134°C - 5 min">134°C - 5 min (Brzi ciklus)</option>
             <option value="134°C - 18 min">134°C - 18 min (Standard)</option>
             <option value="121°C - 20 min">121°C - 20 min (Osjetljivo)</option>
@@ -122,22 +128,22 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700">Kemijski indikator (Prolaz)</label>
-          <select id="indicator-status" class="w-full mt-1 p-2 border rounded-lg">
+          <select id="indicator-status" class="w-full mt-1 p-2.5 border rounded-lg">
             <option value="USPJEŠNO">USPJEŠNO (Promjena boje)</option>
             <option value="NEUSPJEŠNO">NEUSPJEŠNO (Pala provjera)</option>
           </select>
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700">Napomena / Instrumenti</label>
-          <textarea id="steril-note" placeholder="Opis pakiranja ili instrumenata..." class="w-full mt-1 p-2 border rounded-lg"></textarea>
+          <label class="block text-sm font-medium text-gray-700">Napomena / Opis instrumenata</label>
+          <textarea id="steril-note" placeholder="Opis pakiranja, instrumenata ili odjela..." class="w-full mt-1 p-2.5 border rounded-lg"></textarea>
         </div>
 
         <div class="flex space-x-2 pt-2">
-          <button onclick="saveSterilizationEntry()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg">
+          <button id="btn-save-entry" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg">
             Spremi unos
           </button>
-          <button onclick="toggleSterilizationForm()" class="w-1/2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2.5 rounded-lg">
+          <button id="btn-cancel-entry" class="w-1/2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2.5 rounded-lg">
             Odustani
           </button>
         </div>
@@ -145,9 +151,9 @@
 
       <!-- POVIJEST UNOSA -->
       <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 space-y-4">
-        <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Zadnji unosi</h3>
+        <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Evidencija nedavnih unosa</h3>
         <div id="sterilization-list" class="space-y-3">
-          <p class="text-gray-500 italic text-sm">Učitavanje podataka...</p>
+          <p class="text-gray-500 italic text-sm">Nema zabilježenih unosa.</p>
         </div>
       </div>
 
@@ -179,7 +185,6 @@
       addDoc,
       query, 
       where, 
-      orderBy,
       onSnapshot, 
       updateDoc,
       serverTimestamp 
@@ -200,8 +205,19 @@
 
     let currentUser = null;
     let isRegisterMode = false;
+    let currentEntryType = "PRIJEM"; // "PRIJEM" ili "IZDAVANJE"
 
-    window.toggleAuthMode = function() {
+    // EVENT LISTENERI
+    document.getElementById('auth-toggle-link').addEventListener('click', toggleAuthMode);
+    document.getElementById('btn-auth-action').addEventListener('click', handleAuthAction);
+    document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+    
+    document.getElementById('btn-open-prijem').addEventListener('click', () => openForm("PRIJEM"));
+    document.getElementById('btn-open-izdavanje').addEventListener('click', () => openForm("IZDAVANJE"));
+    document.getElementById('btn-cancel-entry').addEventListener('click', closeForm);
+    document.getElementById('btn-save-entry').addEventListener('click', saveSterilizationEntry);
+
+    function toggleAuthMode() {
       isRegisterMode = !isRegisterMode;
       const title = document.getElementById('auth-title');
       const btn = document.getElementById('btn-auth-action');
@@ -222,9 +238,9 @@
         toggleText.textContent = 'Nemate račun?';
         toggleLink.textContent = 'Registrirajte se';
       }
-    };
+    }
 
-    window.handleAuthAction = async function() {
+    async function handleAuthAction() {
       const email = document.getElementById('auth-email').value.trim();
       const password = document.getElementById('auth-password').value;
 
@@ -261,20 +277,32 @@
           alert("Greška kod prijave: " + err.message);
         }
       }
-    };
+    }
 
-    window.logout = function() {
-      signOut(auth);
-    };
+    function openForm(type) {
+      currentEntryType = type;
+      const formContainer = document.getElementById('sterilization-form-container');
+      const title = document.getElementById('form-title');
+      const badge = document.getElementById('form-type-badge');
 
-    // Otvaranje / Zatvaranje forme za unos
-    window.toggleSterilizationForm = function() {
-      const form = document.getElementById('sterilization-form-container');
-      form.classList.toggle('hidden');
-    };
+      title.textContent = `Novi unos - ${type}`;
+      badge.textContent = type;
 
-    // Spremanje unosa sterilizacije
-    window.saveSterilizationEntry = async function() {
+      if (type === "PRIJEM") {
+        badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-green-600 text-white";
+      } else {
+        badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-red-600 text-white";
+      }
+
+      formContainer.classList.remove('hidden');
+      formContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function closeForm() {
+      document.getElementById('sterilization-form-container').classList.add('hidden');
+    }
+
+    async function saveSterilizationEntry() {
       const device = document.getElementById('sterilizer-id').value.trim();
       const cycle = document.getElementById('cycle-number').value.trim();
       const program = document.getElementById('program-type').value;
@@ -288,6 +316,7 @@
 
       try {
         await addDoc(collection(db, "sterilizations"), {
+          vrsta: currentEntryType, // PRIJEM ili IZDAVANJE
           uređaj: device,
           ciklus: cycle,
           program: program,
@@ -298,18 +327,17 @@
           datum: serverTimestamp()
         });
 
-        alert("Unos uspješno spremljen!");
+        alert(`Unos (${currentEntryType}) uspješno spremljen!`);
         
-        // Resetiraj polja
         document.getElementById('sterilizer-id').value = '';
         document.getElementById('cycle-number').value = '';
         document.getElementById('steril-note').value = '';
-        toggleSterilizationForm();
+        closeForm();
 
       } catch (err) {
         alert("Greška kod spremanja: " + err.message);
       }
-    };
+    }
 
     // Praćenje Auth stanja
     onAuthStateChanged(auth, async (user) => {
@@ -372,18 +400,24 @@
               <p class="font-bold text-gray-800">${u.ime}</p>
               <p class="text-xs text-gray-500">${u.email}</p>
             </div>
-            <button onclick="approveUser('${u.uid}')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-bold">
+            <button class="btn-approve bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-bold" data-uid="${u.uid}">
               Odobri
             </button>
           `;
           listDiv.appendChild(item);
         });
+
+        document.querySelectorAll('.btn-approve').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const uid = e.target.getAttribute('data-uid');
+            approveUser(uid);
+          });
+        });
       });
     }
 
     function loadSterilizationLogs() {
-      const q = query(collection(db, "sterilizations"), orderBy("datum", "desc"));
-      onSnapshot(q, (snapshot) => {
+      onSnapshot(collection(db, "sterilizations"), (snapshot) => {
         const listDiv = document.getElementById('sterilization-list');
         listDiv.innerHTML = "";
 
@@ -394,17 +428,24 @@
 
         snapshot.forEach((docItem) => {
           const data = docItem.data();
-          const badgeColor = data.indikator === 'USPJEŠNO' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+          const isPrijem = data.vrsta === 'PRIJEM';
+          const typeBadge = isPrijem 
+            ? '<span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-[10px] font-bold">📥 PRIJEM</span>' 
+            : '<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded text-[10px] font-bold">📤 IZDAVANJE</span>';
+
           const item = document.createElement('div');
-          item.className = "p-3 border rounded-lg bg-gray-50 flex justify-between items-start text-sm";
+          item.className = "p-3 border rounded-lg bg-gray-50 flex justify-between items-start text-sm shadow-sm";
           item.innerHTML = `
             <div>
-              <p class="font-bold text-gray-800">${data.uređaj} (Ciklus #${data.ciklus})</p>
+              <div class="flex items-center gap-2 mb-1">
+                ${typeBadge}
+                <span class="font-bold text-gray-800">${data.uređaj} (Ciklus #${data.ciklus})</span>
+              </div>
               <p class="text-xs text-gray-600">${data.program}</p>
               ${data.napomena ? `<p class="text-xs text-gray-500 mt-1">📝 ${data.napomena}</p>` : ''}
               <p class="text-[10px] text-gray-400 mt-1">Unio: ${data.operaterEmail}</p>
             </div>
-            <span class="px-2 py-1 rounded text-xs font-bold ${badgeColor}">
+            <span class="px-2 py-1 rounded text-xs font-bold ${data.indikator === 'USPJEŠNO' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
               ${data.indikator}
             </span>
           `;
@@ -413,7 +454,7 @@
       });
     }
 
-    window.approveUser = async function(uid) {
+    async function approveUser(uid) {
       try {
         await updateDoc(doc(db, "users", uid), {
           status: "aktivan"
@@ -422,7 +463,7 @@
       } catch (err) {
         alert("Greška kod odobravanja: " + err.message);
       }
-    };
+    }
   </script>
 </body>
 </html>
